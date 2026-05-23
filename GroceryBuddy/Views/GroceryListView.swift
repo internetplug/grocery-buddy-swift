@@ -58,6 +58,7 @@ struct GroceryListView: View {
                         .padding(.bottom, 20)
                     }
                 }
+                .padding(.bottom, 140)
             }
 
             // FAB
