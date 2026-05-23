@@ -25,25 +25,24 @@ struct AddItemSheet: View {
                 VStack(alignment: .leading, spacing: 0) {
                     // Category picker
                     label("H-E-B Department")
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(categories) { cat in
-                                let active = cat.id == selectedCategoryId
-                                Button { selectedCategoryId = cat.id } label: {
-                                    HStack(spacing: 4) {
-                                        Text(cat.emoji).font(.system(size: 13))
-                                        Text(cat.name).font(.system(size: 12, weight: .medium))
-                                    }
-                                    .foregroundColor(active ? .white : Color(hex: cat.textColor))
-                                    .padding(.horizontal, 10).padding(.vertical, 5)
-                                    .background(active ? Color(hex: cat.accentColor) : Color(hex: cat.color))
-                                    .clipShape(Capsule())
-                                    .overlay(active ? nil : Capsule().stroke(Color(hex: "#ECECEC"), lineWidth: 1.5))
+                    let columns = [GridItem(.adaptive(minimum: 130))]
+                    LazyVGrid(columns: columns, spacing: 8) {
+                        ForEach(categories) { cat in
+                            let active = cat.id == selectedCategoryId
+                            Button { selectedCategoryId = cat.id } label: {
+                                HStack(spacing: 4) {
+                                    Text(cat.emoji).font(.system(size: 12))
+                                    Text(cat.name).font(.system(size: 12, weight: .medium))
                                 }
+                                .foregroundColor(active ? .white : Color(hex: cat.textColor))
+                                .padding(.horizontal, 8).padding(.vertical, 5)
+                                .background(active ? Color(hex: cat.accentColor) : Color(hex: cat.color))
+                                .clipShape(Capsule())
+                                .overlay(active ? nil : Capsule().stroke(Color(hex: "#ECECEC"), lineWidth: 1.5))
                             }
                         }
-                        .padding(.horizontal, 20)
                     }
+                    .padding(.horizontal, 8)
                     .padding(.bottom, 8)
 
                     if let cat = activeCategory {
@@ -71,23 +70,22 @@ struct AddItemSheet: View {
 
                     // Suggestions
                     if !suggestions.isEmpty {
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 8) {
-                                ForEach(suggestions, id: \.self) { s in
-                                    Button { name = s } label: {
-                                        Text(s)
-                                            .font(.system(size: 13))
-                                            .foregroundColor(activeCategory.map { Color(hex: $0.textColor) } ?? .appGray)
-                                            .padding(.horizontal, 12).padding(.vertical, 5)
-                                            .background(activeCategory.map { Color(hex: $0.color) } ?? Color(hex: "#F0F0F0"))
-                                            .clipShape(Capsule())
-                                            .overlay(Capsule().stroke((activeCategory.map { Color(hex: $0.accentColor) } ?? .appGray).opacity(0.3), lineWidth: 1.5))
-                                    }
+                        let columns = [GridItem(.adaptive(minimum: 100))]
+                        LazyVGrid(columns: columns, spacing: 8) {
+                            ForEach(suggestions, id: \.self) { s in
+                                Button { name = s } label: {
+                                    Text(s)
+                                        .font(.system(size: 12))
+                                        .foregroundColor(activeCategory.map { Color(hex: $0.textColor) } ?? .appGray)
+                                        .padding(.horizontal, 8).padding(.vertical, 5)
+                                        .background(activeCategory.map { Color(hex: $0.color) } ?? Color(hex: "#F0F0F0"))
+                                        .clipShape(Capsule())
+                                        .overlay(Capsule().stroke((activeCategory.map { Color(hex: $0.accentColor) } ?? .appGray).opacity(0.3), lineWidth: 1.5))
                                 }
                             }
-                            .padding(.horizontal, 20)
                         }
-                        .padding(.bottom, 14)
+                        .padding(.horizontal, 8)
+                        .padding(.bottom, 8)
                     }
 
                     // Quantity

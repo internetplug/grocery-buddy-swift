@@ -46,7 +46,7 @@ struct ItemRowView: View {
             .buttonStyle(.plain)
         }
         .padding(.horizontal, 14)
-        .padding(.vertical, 11)
+        .padding(.vertical, 12)
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 14))
         .shadow(color: .black.opacity(0.05), radius: 2, y: 1)

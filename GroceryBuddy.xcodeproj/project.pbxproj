@@ -74,6 +74,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		AF000000 = {
+			isa = PBXGroup;
+			children = (
+				AF000001 /* GroceryBuddy */,
+				AF000008 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
 		AF000001 /* GroceryBuddy */ = {
 			isa = PBXGroup;
 			children = (
@@ -154,14 +162,6 @@
 			path = Utilities;
 			sourceTree = "<group>";
 		};
-		AF000000 /* root */ = {
-			isa = PBXGroup;
-			children = (
-				AF000001 /* GroceryBuddy */,
-				AF000008 /* Products */,
-			);
-			sourceTree = "<group>";
-		};
 		AF000008 /* Products */ = {
 			isa = PBXGroup;
 			children = (
@@ -213,7 +213,7 @@
 				en,
 				Base,
 			);
-			mainGroup = AF000000 /* root */;
+			mainGroup = AF000000;
 			productRefGroup = AF000008 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -393,6 +393,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = BUH2W92RM9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -404,7 +405,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.grocerybuddy.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.grocerybuddy.io;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -420,6 +421,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "";
+				DEVELOPMENT_TEAM = BUH2W92RM9;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -431,7 +433,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.grocerybuddy.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.grocerybuddy.io;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

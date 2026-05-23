@@ -76,7 +76,8 @@ struct StoreMapView: View {
                                     .font(.system(size: 13, weight: .semibold))
                             }
                             .foregroundColor(vm.route != nil ? .white : (hasPendingItems ? .appRed : Color(hex: "#B0B0B0")))
-                            .padding(.horizontal, 14).padding(.vertical, 8)
+                            .padding(.horizontal, 12).padding(.vertical, 8)
+                            .frame(minWidth: 100)
                             .background(vm.route != nil ? Color.appRed : (hasPendingItems ? Color(hex: "#FFF0F1") : Color(hex: "#F0F0F0")))
                             .clipShape(Capsule())
                         }
@@ -95,7 +96,8 @@ struct StoreMapView: View {
                                 .font(.system(size: 13, weight: .semibold))
                         }
                         .foregroundColor(editMode ? .white : .appDark)
-                        .padding(.horizontal, 16).padding(.vertical, 8)
+                        .padding(.horizontal, 12).padding(.vertical, 8)
+                        .frame(minWidth: 100)
                         .background(editMode ? Color.appDark : Color.white)
                         .clipShape(Capsule())
                         .shadow(color: .black.opacity(0.08), radius: 3)
