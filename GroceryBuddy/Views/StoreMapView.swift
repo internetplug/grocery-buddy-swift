@@ -184,6 +184,39 @@ struct StoreMapView: View {
                         .frame(width: canvasW, height: canvasH)
                 }
 
+                // Store entrance and checkout labels
+                VStack(spacing: 0) {
+                    Spacer()
+                    HStack(spacing: 0) {
+                        VStack(spacing: 4) {
+                            Text("🚪")
+                                .font(.system(size: 16))
+                            Text("Entrance")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(.appGray)
+                        }
+                        Spacer()
+                        VStack(spacing: 4) {
+                            Text("🛒")
+                                .font(.system(size: 16))
+                            Text("Checkout")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(.appGray)
+                        }
+                        Spacer()
+                        VStack(spacing: 4) {
+                            Text("🚪")
+                                .font(.system(size: 16))
+                            Text("Entrance")
+                                .font(.system(size: 10, weight: .semibold))
+                                .foregroundColor(.appGray)
+                        }
+                    }
+                    .frame(height: 40)
+                    .padding(.horizontal, 12)
+                }
+                .frame(width: canvasW, height: canvasH)
+
                 // Add dept FAB (edit mode)
                 if editMode {
                     Button { addDeptOpen = true } label: {
