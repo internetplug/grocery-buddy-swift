@@ -62,7 +62,7 @@ struct AddItemSheet: View {
 
                     // Item name
                     label("Item Name")
-                    TextField("e.g. \(categoryItems[selectedCategoryId ?? "Item"]?.first)", text: $name)
+                    TextField("e.g. \(categoryItems[selectedCategoryId ?? "Item"]?.first ?? "Item")", text: $name)
                         .textFieldStyle(.plain)
                         .padding(12)
                         .background(Color(hex: "#F7F5F2"))
