@@ -13,9 +13,12 @@ struct RouteOverlayView: View {
         for id in route.stops {
             if id == checkoutId {
                 points.append(CGPoint(x: 0.5 * size.width, y: size.height))
-            } else if let l = layouts[id] {
-                points.append(CGPoint(x: (l.x + l.w/2) * size.width,
-                                      y: (l.y + l.h/2) * size.height))
+            } else {
+                let layout = layouts[id] ?? defaultZoneLayouts[id]
+                if let l = layout {
+                    points.append(CGPoint(x: (l.x + l.w/2) * size.width,
+                                          y: (l.y + l.h/2) * size.height))
+                }
             }
         }
         return points
