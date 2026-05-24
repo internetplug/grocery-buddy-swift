@@ -21,7 +21,7 @@ struct StoreMapView: View {
     var hasPendingItems: Bool    { !pendingCats.isEmpty }
 
     var body: some View {
-        ScrollView(editMode ? [] : .vertical) {
+        ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 0) {
                 headerSection
                 mapCard
@@ -41,16 +41,10 @@ struct StoreMapView: View {
     // MARK: - Header
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .bottom) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("StoreMap").font(.system(size: 27, weight: .black)).foregroundColor(.appDark)
-                        .overlay(Text("Store").font(.system(size: 27, weight: .black)).foregroundColor(.appDark) +
-                                 Text("Map").font(.system(size: 27, weight: .black)).foregroundColor(.appRed), alignment: .leading)
-                    Text(editMode ? "Drag to move · corner to resize · + to add"
-                         : vm.route != nil ? "Route active · tap stop to see items"
-                         : "Tap a department to see your items")
-                        .font(.system(size: 12)).foregroundColor(.appGray)
-                }
+            HStack(alignment: .center) {
+                Text("StoreMap").font(.system(size: 27, weight: .black)).foregroundColor(.appDark)
+                    .overlay(Text("Store").font(.system(size: 27, weight: .black)).foregroundColor(.appDark) +
+                             Text("Map").font(.system(size: 27, weight: .black)).foregroundColor(.appRed), alignment: .leading)
                 Spacer()
                 HStack(spacing: 8) {
                     // Layouts button
@@ -64,25 +58,24 @@ struct StoreMapView: View {
                             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color(hex: "#E0E0E0"), lineWidth: 1.5))
                     }
                     // Route button
-                    if !editMode {
-                        Button {
-                            if vm.route != nil { vm.clearRoute() }
-                            else { entrancePickerOpen = true }
-                        } label: {
-                            HStack(spacing: 5) {
-                                Image(systemName: vm.route != nil ? "xmark" : "arrow.right")
-                                    .font(.system(size: 12, weight: .semibold))
-                                Text(vm.route != nil ? "Clear Route" : "Route")
-                                    .font(.system(size: 13, weight: .semibold))
-                            }
-                            .foregroundColor(vm.route != nil ? .white : (hasPendingItems ? .appRed : Color(hex: "#B0B0B0")))
-                            .padding(.horizontal, 12).padding(.vertical, 8)
-                            .frame(minWidth: 100)
-                            .background(vm.route != nil ? Color.appRed : (hasPendingItems ? Color(hex: "#FFF0F1") : Color(hex: "#F0F0F0")))
-                            .clipShape(Capsule())
+                    Button {
+                        if vm.route != nil { vm.clearRoute() }
+                        else { entrancePickerOpen = true }
+                    } label: {
+                        HStack(spacing: 5) {
+                            Image(systemName: vm.route != nil ? "xmark" : "arrow.right")
+                                .font(.system(size: 12, weight: .semibold))
+                            Text(vm.route != nil ? "Clear Route" : "Route")
+                                .font(.system(size: 13, weight: .semibold))
                         }
-                        .disabled(!hasPendingItems && vm.route == nil)
+                        .foregroundColor(vm.route != nil ? .white : (hasPendingItems ? .appRed : Color(hex: "#B0B0B0")))
+                        .padding(.horizontal, 12).padding(.vertical, 8)
+                        .frame(minWidth: 100)
+                        .background(vm.route != nil ? Color.appRed : (hasPendingItems ? Color(hex: "#FFF0F1") : Color(hex: "#F0F0F0")))
+                        .clipShape(Capsule())
                     }
+                    .disabled(!hasPendingItems && vm.route == nil)
+                    .opacity(editMode ? 0 : 1)
                     // Edit button
                     Button {
                         withAnimation { editMode.toggle() }
@@ -105,19 +98,24 @@ struct StoreMapView: View {
                 }
             }
 
+            Text(editMode ? "Drag to move · corner to resize · + to add"
+                 : vm.route != nil ? "Route active · tap stop to see items"
+                 : "Tap a department to see your items")
+                .font(.system(size: 12)).foregroundColor(.appGray)
+                .lineLimit(2)
+
             // Legend
             HStack(spacing: 12) {
                 legendDot(color: "#E91E2C", label: "Has items")
                 legendDot(color: "#4CAF78", label: "All done")
                 legendDot(color: "#E0E0E0", label: "Empty")
                 Spacer()
-                if editMode {
-                    Button("Reset") { vm.resetMapLayout() }
-                        .font(.system(size: 11, weight: .medium))
-                        .foregroundColor(.appRed)
-                        .padding(.horizontal, 10).padding(.vertical, 4)
-                        .overlay(Capsule().stroke(Color(hex: "#FFCDD2"), lineWidth: 1.5))
-                }
+                Button("Reset") { vm.resetMapLayout() }
+                    .font(.system(size: 11, weight: .medium))
+                    .foregroundColor(.appRed)
+                    .padding(.horizontal, 10).padding(.vertical, 4)
+                    .overlay(Capsule().stroke(Color(hex: "#FFCDD2"), lineWidth: 1.5))
+                    .opacity(editMode ? 1 : 0)
             }
         }
         .padding(.horizontal, 16)

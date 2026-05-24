@@ -7,13 +7,18 @@ struct RouteComputer {
         layouts: [String: ZoneLayout],
         pendingCategoryIds: Set<String>
     ) -> [String] {
-        let eligible = categories.filter { pendingCategoryIds.contains($0.id) && layouts[$0.id] != nil }
+        let eligible = categories.filter { cat in
+            guard pendingCategoryIds.contains(cat.id) else { return false }
+            let layout = layouts[cat.id] ?? defaultZoneLayouts[cat.id]
+            return layout != nil
+        }
         guard !eligible.isEmpty else { return [checkoutId] }
 
         let start: (x: Double, y: Double) = entrance == .left ? (0.05, 1.0) : (0.95, 1.0)
         var centers: [String: (x: Double, y: Double)] = [:]
         for cat in eligible {
-            if let l = layouts[cat.id] {
+            let layout = layouts[cat.id] ?? defaultZoneLayouts[cat.id]
+            if let l = layout {
                 centers[cat.id] = (l.x + l.w / 2, l.y + l.h / 2)
             }
         }

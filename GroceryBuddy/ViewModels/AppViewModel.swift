@@ -72,6 +72,7 @@ class AppViewModel: ObservableObject {
 
     func deleteCategory(_ id: String) {
         categories.removeAll { $0.id == id }
+        items.removeAll { $0.categoryId == id }
         mapLayout.removeValue(forKey: id)
         if route?.stops.contains(id) == true { route = nil }
     }

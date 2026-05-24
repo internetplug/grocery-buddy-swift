@@ -6,13 +6,17 @@ struct AddItemSheet: View {
 
     @State private var name = ""
     @State private var quantity = ""
-    @State private var selectedCategoryId: String = ""
+    @State private var selectedCategoryId: String?
 
     private var categories: [CustomCategory] { vm.categories }
-    private var activeCategory: CustomCategory? { categories.first { $0.id == selectedCategoryId } ?? categories.first }
+    private var activeCategory: CustomCategory? {
+        let id = selectedCategoryId ?? categories.first?.id
+        return categories.first { $0.id == id }
+    }
 
     private var suggestions: [String] {
-        let all = categoryItems[selectedCategoryId] ?? []
+        let id = selectedCategoryId ?? categories.first?.id ?? ""
+        let all = categoryItems[id] ?? []
         if name.count > 1 {
             return Array(all.filter { $0.lowercased().contains(name.lowercased()) }.prefix(8))
         }
@@ -28,7 +32,7 @@ struct AddItemSheet: View {
                     let columns = [GridItem(.adaptive(minimum: 130))]
                     LazyVGrid(columns: columns, spacing: 8) {
                         ForEach(categories) { cat in
-                            let active = cat.id == selectedCategoryId
+                            let active = cat.id == (selectedCategoryId ?? categories.first?.id)
                             Button { selectedCategoryId = cat.id } label: {
                                 HStack(spacing: 4) {
                                     Text(cat.emoji).font(.system(size: 12))
@@ -58,7 +62,7 @@ struct AddItemSheet: View {
 
                     // Item name
                     label("Item Name")
-                    TextField("e.g. \(categoryItems[selectedCategoryId]?.first ?? "Item")", text: $name)
+                    TextField("e.g. \(categoryItems[selectedCategoryId ?? "Item"]?.first)", text: $name)
                         .textFieldStyle(.plain)
                         .padding(12)
                         .background(Color(hex: "#F7F5F2"))
@@ -134,9 +138,6 @@ struct AddItemSheet: View {
         }
         .presentationDetents([.large])
         .presentationDragIndicator(.visible)
-        .onAppear {
-            selectedCategoryId = vm.categories.first?.id ?? ""
-        }
     }
 
     private func label(_ text: String) -> some View {
