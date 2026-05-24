@@ -89,6 +89,8 @@ struct GroceryListView: View {
                     Text("GroceryBuddy")
                         .font(.system(size: 27, weight: .black))
                         .foregroundColor(.appDark)
+                        .overlay(Text("Grocery").font(.system(size: 27, weight: .black)).foregroundColor(.appDark) +
+                                 Text("Buddy").font(.system(size: 27, weight: .black)).foregroundColor(.appRed), alignment: .leading)
                     Text("\(checkedItems)/\(totalItems) items checked off")
                         .font(.system(size: 12))
                         .foregroundColor(.appGray)

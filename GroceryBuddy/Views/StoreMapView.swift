@@ -43,8 +43,8 @@ struct StoreMapView: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .bottom) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Store\nMap").font(.system(size: 27, weight: .black)).foregroundColor(.appDark)
-                        .overlay(Text("Store\n").font(.system(size: 27, weight: .black)).foregroundColor(.appDark) +
+                    Text("StoreMap").font(.system(size: 27, weight: .black)).foregroundColor(.appDark)
+                        .overlay(Text("Store").font(.system(size: 27, weight: .black)).foregroundColor(.appDark) +
                                  Text("Map").font(.system(size: 27, weight: .black)).foregroundColor(.appRed), alignment: .leading)
                     Text(editMode ? "Drag to move · corner to resize · + to add"
                          : vm.route != nil ? "Route active · tap stop to see items"

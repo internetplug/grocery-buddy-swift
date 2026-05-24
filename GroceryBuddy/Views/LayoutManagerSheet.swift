@@ -13,7 +13,7 @@ struct LayoutManagerSheet: View {
                     // Save current
                     sectionLabel("Save Current Layout")
                     HStack(spacing: 8) {
-                        TextField("e.g. My H-E-B, Weekend Layout…", text: $saveName)
+                        TextField("e.g. My Store, Grocery Layout…", text: $saveName)
                             .textFieldStyle(.plain)
                             .padding(12)
                             .background(Color(hex: "#F7F5F2"))

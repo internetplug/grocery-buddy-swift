@@ -24,7 +24,7 @@ struct AddItemSheet: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     // Category picker
-                    label("H-E-B Department")
+                    label("Grocery Department")
                     let columns = [GridItem(.adaptive(minimum: 130))]
                     LazyVGrid(columns: columns, spacing: 8) {
                         ForEach(categories) { cat in
