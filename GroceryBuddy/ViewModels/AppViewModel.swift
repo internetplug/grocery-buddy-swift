@@ -112,7 +112,18 @@ class AppViewModel: ObservableObject {
 
     // MARK: - Saved layouts
     func saveLayout(name: String) {
-        let slot = SavedLayoutSlot(id: UUID().uuidString, name: name, layouts: mapLayout, savedAt: Date().timeIntervalSince1970 * 1000)
+        let deletedIds = defaultCategories.compactMap { defaultCat in
+            categories.contains(where: { $0.id == defaultCat.id }) ? nil : defaultCat.id
+        }
+        let customCats = categories.filter { !$0.builtin }
+        let slot = SavedLayoutSlot(
+            id: UUID().uuidString,
+            name: name,
+            layouts: mapLayout,
+            deletedCategoryIds: deletedIds,
+            customCategories: customCats,
+            savedAt: Date().timeIntervalSince1970 * 1000
+        )
         savedLayouts.insert(slot, at: 0)
     }
 
@@ -120,6 +131,10 @@ class AppViewModel: ObservableObject {
         var merged = defaultZoneLayouts
         for (k, v) in slot.layouts { merged[k] = v }
         mapLayout = merged
+
+        var newCategories = defaultCategories.filter { !slot.deletedCategoryIds.contains($0.id) }
+        newCategories.append(contentsOf: slot.customCategories)
+        categories = newCategories
     }
 
     func deleteLayout(_ id: String) {
@@ -128,5 +143,11 @@ class AppViewModel: ObservableObject {
 
     func resetMapLayout() {
         mapLayout = defaultZoneLayouts
+        // Restore any deleted default categories
+        for defaultCat in defaultCategories {
+            if !categories.contains(where: { $0.id == defaultCat.id }) {
+                categories.append(defaultCat)
+            }
+        }
     }
 }

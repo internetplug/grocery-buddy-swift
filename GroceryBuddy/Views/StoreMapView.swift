@@ -7,6 +7,7 @@ struct StoreMapView: View {
     @State private var addDeptOpen = false
     @State private var entrancePickerOpen = false
     @State private var layoutManagerOpen = false
+    @State private var showResetConfirmation = false
 
     // Drag/resize state
     @State private var dragging: String? = nil
@@ -25,6 +26,23 @@ struct StoreMapView: View {
             VStack(alignment: .leading, spacing: 0) {
                 headerSection
                 mapCard
+                // Add department button (edit mode)
+                if editMode {
+                    Button { addDeptOpen = true } label: {
+                        HStack(spacing: 8) {
+                            Image(systemName: "plus")
+                                .font(.system(size: 16, weight: .semibold))
+                            Text("Add Department")
+                                .font(.system(size: 14, weight: .semibold))
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .background(Color.appDark)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                    }
+                    .padding(.horizontal, 14).padding(.top, 12)
+                }
                 if let r = vm.route, !r.stops.isEmpty {
                     routePanel(r)
                 }
@@ -36,6 +54,14 @@ struct StoreMapView: View {
         .sheet(isPresented: $addDeptOpen) { AddDepartmentSheet() }
         .sheet(isPresented: $entrancePickerOpen) { EntrancePickerSheet() }
         .sheet(isPresented: $layoutManagerOpen) { LayoutManagerSheet() }
+        .alert("Reset Layout?", isPresented: $showResetConfirmation) {
+            Button("Cancel", role: .cancel) { }
+            Button("Reset to Default", role: .destructive) {
+                vm.resetMapLayout()
+            }
+        } message: {
+            Text("This will restore the default layout and bring back any deleted departments.")
+        }
     }
 
     // MARK: - Header
@@ -110,7 +136,7 @@ struct StoreMapView: View {
                 legendDot(color: "#4CAF78", label: "All done")
                 legendDot(color: "#E0E0E0", label: "Empty")
                 Spacer()
-                Button("Reset") { vm.resetMapLayout() }
+                Button("Reset") { showResetConfirmation = true }
                     .font(.system(size: 11, weight: .medium))
                     .foregroundColor(.appRed)
                     .padding(.horizontal, 10).padding(.vertical, 4)
@@ -184,29 +210,32 @@ struct StoreMapView: View {
                         .frame(width: canvasW, height: canvasH)
                 }
 
-                // Store entrance and checkout labels
+                // Store entrance and checkout dots
                 VStack(spacing: 0) {
                     Spacer()
                     HStack(spacing: 0) {
                         VStack(spacing: 4) {
-                            Text("🚪")
-                                .font(.system(size: 16))
+                            Circle()
+                                .fill(vm.route?.entrance == .left ? Color.appRed : Color(hex: "#E0E0E0"))
+                                .frame(width: 12, height: 12)
                             Text("Entrance")
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundColor(.appGray)
                         }
                         Spacer()
                         VStack(spacing: 4) {
-                            Text("🛒")
-                                .font(.system(size: 16))
+                            Circle()
+                                .fill(Color.appRed)
+                                .frame(width: 12, height: 12)
                             Text("Checkout")
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundColor(.appGray)
                         }
                         Spacer()
                         VStack(spacing: 4) {
-                            Text("🚪")
-                                .font(.system(size: 16))
+                            Circle()
+                                .fill(vm.route?.entrance == .right ? Color.appRed : Color(hex: "#E0E0E0"))
+                                .frame(width: 12, height: 12)
                             Text("Entrance")
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundColor(.appGray)
@@ -217,19 +246,6 @@ struct StoreMapView: View {
                 }
                 .frame(width: canvasW, height: canvasH)
 
-                // Add dept FAB (edit mode)
-                if editMode {
-                    Button { addDeptOpen = true } label: {
-                        Image(systemName: "plus")
-                            .font(.system(size: 18, weight: .semibold))
-                            .foregroundColor(.white)
-                            .frame(width: 36, height: 36)
-                            .background(Color.appDark)
-                            .clipShape(Circle())
-                            .shadow(color: .black.opacity(0.25), radius: 6, y: 2)
-                    }
-                    .position(x: canvasW - 26, y: canvasH - 26)
-                }
             }
             .frame(width: canvasW, height: canvasH)
             .background(Color.white)

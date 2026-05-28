@@ -8,6 +8,7 @@ struct GroceryBuddyApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(vm)
+                .preferredColorScheme(.light)
         }
     }
 }
