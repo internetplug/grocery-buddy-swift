@@ -18,7 +18,9 @@ class AppViewModel: ObservableObject {
         // Persist locally on every change
         $items.dropFirst().sink { LocalStore.saveItems($0) }.store(in: &cancellables)
         $categories.dropFirst().sink { LocalStore.saveCategories($0) }.store(in: &cancellables)
-        $mapLayout.dropFirst().sink { LocalStore.saveMapLayout($0) }.store(in: &cancellables)
+        $mapLayout.dropFirst()
+            .throttle(for: .seconds(0.5), scheduler: DispatchQueue.main, latest: true)
+            .sink { LocalStore.saveMapLayout($0) }.store(in: &cancellables)
         $savedLayouts.dropFirst().sink { LocalStore.saveSavedLayouts($0) }.store(in: &cancellables)
 
         // Cloud sync on data change when logged in

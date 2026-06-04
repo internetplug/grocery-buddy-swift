@@ -71,11 +71,11 @@ struct ZoneView: View {
                     .fill(allDone ? Color.appGreen : Color.appRed)
                     .frame(width: 7, height: 7)
                     .frame(maxWidth: .infinity, alignment: .trailing)
-                    .padding(.top, 3).padding(.trailing, editMode ? 18 : 3)
+                    .padding(.top, 3).padding(.trailing, (editMode && isSelected) ? 18 : 3)
             }
 
-            // Delete button (edit mode)
-            if editMode {
+            // Delete button (active in edit mode only)
+            if editMode && isSelected {
                 Button { onDelete() } label: {
                     Circle().fill(Color(hex: "#FF5252"))
                         .frame(width: 14, height: 14)
@@ -86,8 +86,8 @@ struct ZoneView: View {
                 .buttonStyle(.plain)
             }
 
-            // Resize handle (edit mode)
-            if editMode {
+            // Resize handle (active in edit mode only)
+            if editMode && isSelected {
                 Image(systemName: "arrow.up.left.and.arrow.down.right")
                     .font(.system(size: 8, weight: .semibold))
                     .foregroundColor(.white)
@@ -104,14 +104,14 @@ struct ZoneView: View {
             }
         }
         .frame(width: w, height: h)
+        .zIndex(editMode && isSelected ? 1 : 0)
         .position(x: x + w/2, y: y + h/2)
         .gesture(
-            editMode
-            ? DragGesture()
+            DragGesture()
                 .onChanged { onDragChanged($0) }
-                .onEnded { onDragEnded($0) }
-            : nil
+                .onEnded { onDragEnded($0) },
+            including: (editMode && isSelected) ? .all : .subviews
         )
-        .onTapGesture { if !editMode { onTap() } }
+        .onTapGesture { onTap() }
     }
 }

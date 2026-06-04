@@ -44,26 +44,32 @@ let colorPalette: [(color: String, textColor: String, accentColor: String)] = [
 ]
 
 let defaultZoneLayouts: [String: ZoneLayout] = {
-    let cols = 12.0, rows = 13.0
+    // Wide (landscape) store: 18 columns x 10 rows. Bottom row left clear for the
+    // entrance/checkout strip. Perimeter fresh depts on the walls, aisles through the center.
+    let cols = 18.0, rows = 10.0
     func g(_ col: Double, _ colSpan: Double, _ row: Double, _ rowSpan: Double) -> ZoneLayout {
         ZoneLayout(x: (col-1)/cols, y: (row-1)/rows, w: colSpan/cols, h: rowSpan/rows)
     }
     return [
-        "produce":    g(1,  4, 1,  2),
-        "floral":     g(5,  2, 1,  2),
-        "bakery":     g(7,  3, 1,  2),
-        "deli":       g(10, 3, 1,  2),
-        "meat":       g(1,  2, 3,  4),
-        "dairy":      g(11, 2, 3,  5),
-        "frozen":     g(11, 2, 8,  4),
-        "pantry":     g(3,  4, 3,  4),
-        "beverages":  g(7,  4, 3,  3),
-        "beer_wine":  g(7,  4, 6,  2),
-        "essentials": g(3,  3, 9,  3),
-        "health":     g(6,  3, 9,  3),
-        "home":       g(9,  2, 8,  3),
-        "pets":       g(9,  2, 11, 2),
-        "baby":       g(3,  4, 12, 2),
+        // Left wall
+        "produce":    g(1,  4, 1, 3),
+        "floral":     g(1,  2, 4, 2),
+        "beer_wine":  g(3,  2, 4, 2),
+        "baby":       g(1,  4, 6, 2),
+        "pets":       g(1,  4, 8, 2),
+        // Top wall
+        "bakery":     g(5,  3, 1, 2),
+        "deli":       g(8,  3, 1, 2),
+        "meat":       g(11, 4, 1, 2),
+        // Center aisles
+        "pantry":     g(5,  5, 3, 3),
+        "beverages":  g(10, 5, 3, 3),
+        "essentials": g(5,  3, 6, 2),
+        "health":     g(8,  3, 6, 2),
+        "home":       g(11, 4, 6, 2),
+        // Right wall
+        "dairy":      g(15, 4, 1, 3),
+        "frozen":     g(15, 4, 4, 3),
     ]
 }()
 

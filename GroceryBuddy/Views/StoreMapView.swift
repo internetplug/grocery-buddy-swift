@@ -8,14 +8,9 @@ struct StoreMapView: View {
     @State private var entrancePickerOpen = false
     @State private var layoutManagerOpen = false
     @State private var showResetConfirmation = false
+    @State private var isMapZoomed = false
 
-    // Drag/resize state
-    @State private var dragging: String? = nil
-    @State private var resizing: String? = nil
-    @State private var dragStart: CGPoint = .zero
-    @State private var origLayout: ZoneLayout = ZoneLayout(x:0,y:0,w:0,h:0)
-
-    private let minW = 0.10, minH = 0.08
+    private let mapAspect: CGFloat = 1.5   // width : height
 
     var pendingCats: Set<String> { Set(vm.items.filter { !$0.checked }.map { $0.categoryId }) }
     var doneCats: Set<String>    { Set(vm.items.filter {  $0.checked }.map { $0.categoryId }) }
@@ -25,7 +20,15 @@ struct StoreMapView: View {
         ScrollView(.vertical) {
             VStack(alignment: .leading, spacing: 0) {
                 headerSection
-                mapCard
+                MapCanvasView(
+                    editMode: editMode,
+                    selectedCat: $selectedCat,
+                    pendingCats: pendingCats,
+                    doneCats: doneCats,
+                    isZoomed: $isMapZoomed
+                )
+                .aspectRatio(mapAspect, contentMode: .fit)
+                .padding(.horizontal, 14)
                 // Add department button (edit mode)
                 if editMode {
                     Button { addDeptOpen = true } label: {
@@ -49,7 +52,10 @@ struct StoreMapView: View {
                 selectedPanel
             }
             .padding(.bottom, 24)
+            .contentShape(Rectangle())
+            .onTapGesture { if editMode { selectedCat = nil } }
         }
+        .scrollDisabled(isMapZoomed || (editMode && selectedCat != nil))
         .background(Color.appBg)
         .sheet(isPresented: $addDeptOpen) { AddDepartmentSheet() }
         .sheet(isPresented: $entrancePickerOpen) { EntrancePickerSheet() }
@@ -124,7 +130,7 @@ struct StoreMapView: View {
                 }
             }
 
-            Text(editMode ? "Drag to move · corner to resize · + to add"
+            Text(editMode ? "Tap to select · drag to move · corner to resize · pinch to zoom"
                  : vm.route != nil ? "Route active · tap stop to see items"
                  : "Tap a department to see your items")
                 .font(.system(size: 12)).foregroundColor(.appGray)
@@ -154,110 +160,6 @@ struct StoreMapView: View {
             Circle().fill(Color(hex: color)).frame(width: 9, height: 9)
             Text(label).font(.system(size: 11)).foregroundColor(.appGray)
         }
-    }
-
-    // MARK: - Map Canvas
-    private var mapCard: some View {
-        GeometryReader { geo in
-            let canvasW = geo.size.width
-            let canvasH = canvasW * 1.1
-
-            ZStack {
-                // Zones
-                ForEach(vm.categories) { cat in
-                    let layout = vm.mapLayout[cat.id] ?? defaultZoneLayouts[cat.id] ?? ZoneLayout(x:0.3,y:0.3,w:0.2,h:0.15)
-                    ZoneView(
-                        category: cat,
-                        layout: layout,
-                        canvasSize: CGSize(width: canvasW, height: canvasH),
-                        editMode: editMode,
-                        isSelected: selectedCat == cat.id,
-                        hasPending: pendingCats.contains(cat.id),
-                        allDone: !pendingCats.contains(cat.id) && doneCats.contains(cat.id),
-                        inRoute: vm.route?.stops.contains(cat.id) == true,
-                        notInRoute: vm.route != nil && vm.route?.stops.contains(cat.id) != true,
-                        stopIndex: vm.route.flatMap { r in r.stops.firstIndex(of: cat.id).map { $0 + 1 } },
-                        onTap: { selectedCat = (selectedCat == cat.id ? nil : cat.id) },
-                        onDelete: { vm.deleteCategory(cat.id) },
-                        onDragChanged: { val in
-                            if dragging == nil { dragging = cat.id; dragStart = val.startLocation; origLayout = layout }
-                            if dragging == cat.id {
-                                let dx = val.translation.width / canvasW
-                                let dy = val.translation.height / canvasH
-                                let newX = min(max(origLayout.x + dx, 0), 1 - origLayout.w)
-                                let newY = min(max(origLayout.y + dy, 0), 1 - origLayout.h)
-                                vm.mapLayout[cat.id] = ZoneLayout(x: newX, y: newY, w: origLayout.w, h: origLayout.h)
-                            }
-                        },
-                        onDragEnded: { _ in dragging = nil; LocalStore.saveMapLayout(vm.mapLayout) },
-                        onResizeChanged: { val in
-                            if resizing == nil { resizing = cat.id; origLayout = layout }
-                            if resizing == cat.id {
-                                let dw = val.translation.width / canvasW
-                                let dh = val.translation.height / canvasH
-                                let newW = min(max(origLayout.w + dw, minW), 1 - origLayout.x)
-                                let newH = min(max(origLayout.h + dh, minH), 1 - origLayout.y)
-                                vm.mapLayout[cat.id] = ZoneLayout(x: origLayout.x, y: origLayout.y, w: newW, h: newH)
-                            }
-                        },
-                        onResizeEnded: { _ in resizing = nil; LocalStore.saveMapLayout(vm.mapLayout) }
-                    )
-                }
-
-                // Route overlay
-                if let r = vm.route {
-                    RouteOverlayView(route: r, layouts: vm.mapLayout, categories: vm.categories)
-                        .frame(width: canvasW, height: canvasH)
-                }
-
-                // Store entrance and checkout dots
-                VStack(spacing: 0) {
-                    Spacer()
-                    HStack(spacing: 0) {
-                        VStack(spacing: 4) {
-                            Circle()
-                                .fill(vm.route?.entrance == .left ? Color.appRed : Color(hex: "#E0E0E0"))
-                                .frame(width: 12, height: 12)
-                            Text("Entrance")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundColor(.appGray)
-                        }
-                        Spacer()
-                        VStack(spacing: 4) {
-                            Circle()
-                                .fill(Color.appRed)
-                                .frame(width: 12, height: 12)
-                            Text("Checkout")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundColor(.appGray)
-                        }
-                        Spacer()
-                        VStack(spacing: 4) {
-                            Circle()
-                                .fill(vm.route?.entrance == .right ? Color.appRed : Color(hex: "#E0E0E0"))
-                                .frame(width: 12, height: 12)
-                            Text("Entrance")
-                                .font(.system(size: 10, weight: .semibold))
-                                .foregroundColor(.appGray)
-                        }
-                    }
-                    .frame(height: 40)
-                    .padding(.horizontal, 12)
-                }
-                .frame(width: canvasW, height: canvasH)
-
-            }
-            .frame(width: canvasW, height: canvasH)
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
-            .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(editMode ? Color.appDark : (vm.route != nil ? Color.appRed : Color(hex: "#E0E0E0")), lineWidth: 2)
-            )
-            .shadow(color: .black.opacity(0.07), radius: 8, y: 2)
-        }
-        .aspectRatio(1/1.1, contentMode: .fit)
-        .padding(.horizontal, 14)
     }
 
     // MARK: - Route panel
@@ -339,7 +241,7 @@ struct StoreMapView: View {
     // MARK: - Selected category detail panel
     @ViewBuilder
     private var selectedPanel: some View {
-        if let id = selectedCat, let cat = vm.categories.first(where: { $0.id == id }) {
+        if !editMode, let id = selectedCat, let cat = vm.categories.first(where: { $0.id == id }) {
             let catItems = vm.items.filter { $0.categoryId == id }
             if !catItems.isEmpty {
                 VStack(alignment: .leading, spacing: 8) {
@@ -361,6 +263,261 @@ struct StoreMapView: View {
                 .transition(.opacity.combined(with: .move(edge: .bottom)))
                 .animation(.easeInOut(duration: 0.22), value: selectedCat)
             }
+        }
+    }
+}
+
+// MARK: - Map Canvas (isolated for performance)
+// Owns only pan/zoom — the heavy zone content lives in MapContentView so
+// per-frame pan updates don't re-evaluate the ForEach.
+private struct MapCanvasView: View {
+    @EnvironmentObject var vm: AppViewModel
+    let editMode: Bool
+    @Binding var selectedCat: String?
+    let pendingCats: Set<String>
+    let doneCats: Set<String>
+    @Binding var isZoomed: Bool
+
+    // Zoom/pan state. basePan holds the committed offset; panDelta is the
+    // transient gesture delta. @GestureState bypasses normal @State invalidation
+    // so live drag updates render every frame.
+    @State private var zoomScale: CGFloat = 1
+    @State private var baseZoom: CGFloat = 1
+    @State private var basePan: CGSize = .zero
+    @GestureState private var panDelta: CGSize = .zero
+    @State private var isPinching: Bool = false
+
+    private let mapAspect: CGFloat = 1.5
+    private let minZoom: CGFloat = 1, maxZoom: CGFloat = 4
+
+    var body: some View {
+        GeometryReader { geo in
+            let canvasW = geo.size.width
+            let canvasH = canvasW / mapAspect
+            let cw = canvasW * zoomScale
+            let ch = canvasH * zoomScale
+
+            MapContentView(
+                editMode: editMode,
+                selectedCat: $selectedCat,
+                pendingCats: pendingCats,
+                doneCats: doneCats,
+                canvasSize: CGSize(width: cw, height: ch),
+                suppressTaps: isPinching
+            )
+            .frame(width: cw, height: ch)
+            .offset(clampPan(
+                CGSize(width: basePan.width + panDelta.width,
+                       height: basePan.height + panDelta.height),
+                scale: zoomScale, viewW: canvasW, viewH: canvasH
+            ))
+            .frame(width: canvasW, height: canvasH)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .overlay(
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(editMode ? Color.appDark : (vm.route != nil ? Color.appRed : Color(hex: "#E0E0E0")), lineWidth: 2)
+            )
+            .shadow(color: .black.opacity(0.07), radius: 8, y: 2)
+            .contentShape(Rectangle())
+            .simultaneousGesture(
+                MagnificationGesture()
+                    .onChanged { value in
+                        if !isPinching { isPinching = true }
+                        zoomScale = min(max(baseZoom * value, minZoom), maxZoom)
+                        basePan = clampPan(basePan, scale: zoomScale, viewW: canvasW, viewH: canvasH)
+                    }
+                    .onEnded { _ in
+                        baseZoom = zoomScale
+                        // Keep suppression on briefly so the final finger-lift
+                        // doesn't get interpreted as a tap on a zone.
+                        Task { @MainActor in
+                            try? await Task.sleep(nanoseconds: 300_000_000)
+                            isPinching = false
+                        }
+                    }
+            )
+            .gesture(
+                DragGesture()
+                    .updating($panDelta) { value, state, _ in
+                        state = value.translation
+                    }
+                    .onEnded { value in
+                        basePan = clampPan(
+                            CGSize(width: basePan.width + value.translation.width,
+                                   height: basePan.height + value.translation.height),
+                            scale: zoomScale, viewW: canvasW, viewH: canvasH
+                        )
+                    },
+                including: zoomScale > 1 ? .gesture : .subviews
+            )
+            .overlay(alignment: .topTrailing) {
+                if zoomScale > 1 {
+                    Button { resetZoom() } label: {
+                        Image(systemName: "arrow.down.right.and.arrow.up.left")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.appDark)
+                            .frame(width: 32, height: 32)
+                            .background(.white)
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .shadow(color: .black.opacity(0.12), radius: 3, y: 1)
+                    }
+                    .padding(10)
+                }
+            }
+            .onChange(of: zoomScale) { _, newValue in
+                let zoomed = newValue > 1
+                if isZoomed != zoomed { isZoomed = zoomed }
+            }
+        }
+    }
+
+    private func resetZoom() {
+        withAnimation(.easeInOut(duration: 0.25)) {
+            zoomScale = 1; baseZoom = 1
+            basePan = .zero
+        }
+    }
+
+    private func clampPan(_ offset: CGSize, scale: CGFloat, viewW: CGFloat, viewH: CGFloat) -> CGSize {
+        let maxX = viewW * (scale - 1) / 2
+        let maxY = viewH * (scale - 1) / 2
+        return CGSize(width: min(max(offset.width, -maxX), maxX),
+                      height: min(max(offset.height, -maxY), maxY))
+    }
+}
+
+// Holds the zone ForEach, route overlay, and entrance markers. Owns its own
+// drag/resize override state so an active edit-mode drag doesn't touch vm.mapLayout
+// every frame. Its inputs are independent of pan/zoom delta, so SwiftUI can skip
+// re-evaluating its body while the user is panning.
+private struct MapContentView: View {
+    @EnvironmentObject var vm: AppViewModel
+    let editMode: Bool
+    @Binding var selectedCat: String?
+    let pendingCats: Set<String>
+    let doneCats: Set<String>
+    let canvasSize: CGSize
+    let suppressTaps: Bool
+
+    @State private var dragging: String? = nil
+    @State private var resizing: String? = nil
+    @State private var origLayout: ZoneLayout = ZoneLayout(x:0,y:0,w:0,h:0)
+    @State private var dragOverrideId: String? = nil
+    @State private var dragOverrideLayout: ZoneLayout = ZoneLayout(x:0,y:0,w:0,h:0)
+
+    private let minW = 0.10, minH = 0.08
+
+    var body: some View {
+        let cw = canvasSize.width
+        let ch = canvasSize.height
+        ZStack {
+            ForEach(vm.categories) { cat in
+                let baseLayout = vm.mapLayout[cat.id] ?? defaultZoneLayouts[cat.id] ?? ZoneLayout(x:0.3,y:0.3,w:0.2,h:0.15)
+                let layout = (dragOverrideId == cat.id) ? dragOverrideLayout : baseLayout
+                ZoneView(
+                    category: cat,
+                    layout: layout,
+                    canvasSize: canvasSize,
+                    editMode: editMode,
+                    isSelected: selectedCat == cat.id,
+                    hasPending: pendingCats.contains(cat.id),
+                    allDone: !pendingCats.contains(cat.id) && doneCats.contains(cat.id),
+                    inRoute: vm.route?.stops.contains(cat.id) == true,
+                    notInRoute: vm.route != nil && vm.route?.stops.contains(cat.id) != true,
+                    stopIndex: vm.route.flatMap { r in r.stops.firstIndex(of: cat.id).map { $0 + 1 } },
+                    onTap: {
+                        if suppressTaps { return }
+                        selectedCat = (selectedCat == cat.id ? nil : cat.id)
+                    },
+                    onDelete: {
+                        if selectedCat == cat.id { selectedCat = nil }
+                        vm.deleteCategory(cat.id)
+                    },
+                    onDragChanged: { val in
+                        if dragging == nil {
+                            dragging = cat.id
+                            origLayout = layout
+                            dragOverrideId = cat.id
+                        }
+                        if dragging == cat.id {
+                            let dx = val.translation.width / cw
+                            let dy = val.translation.height / ch
+                            let newX = min(max(origLayout.x + dx, 0), 1 - origLayout.w)
+                            let newY = min(max(origLayout.y + dy, 0), 1 - origLayout.h)
+                            dragOverrideLayout = ZoneLayout(x: newX, y: newY, w: origLayout.w, h: origLayout.h)
+                        }
+                    },
+                    onDragEnded: { _ in
+                        if let id = dragOverrideId {
+                            vm.mapLayout[id] = dragOverrideLayout
+                        }
+                        dragging = nil
+                        dragOverrideId = nil
+                    },
+                    onResizeChanged: { val in
+                        if resizing == nil {
+                            resizing = cat.id
+                            origLayout = layout
+                            dragOverrideId = cat.id
+                        }
+                        if resizing == cat.id {
+                            let dw = val.translation.width / cw
+                            let dh = val.translation.height / ch
+                            let newW = min(max(origLayout.w + dw, minW), 1 - origLayout.x)
+                            let newH = min(max(origLayout.h + dh, minH), 1 - origLayout.y)
+                            dragOverrideLayout = ZoneLayout(x: origLayout.x, y: origLayout.y, w: newW, h: newH)
+                        }
+                    },
+                    onResizeEnded: { _ in
+                        if let id = dragOverrideId {
+                            vm.mapLayout[id] = dragOverrideLayout
+                        }
+                        resizing = nil
+                        dragOverrideId = nil
+                    }
+                )
+            }
+
+            if let r = vm.route {
+                RouteOverlayView(route: r, layouts: vm.mapLayout, categories: vm.categories)
+                    .frame(width: cw, height: ch)
+            }
+
+            VStack(spacing: 0) {
+                Spacer()
+                HStack(spacing: 0) {
+                    VStack(spacing: 4) {
+                        Circle()
+                            .fill(vm.route?.entrance == .left ? Color.appRed : Color(hex: "#E0E0E0"))
+                            .frame(width: 12, height: 12)
+                        Text("Entrance")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(.appGray)
+                    }
+                    Spacer()
+                    VStack(spacing: 4) {
+                        Circle()
+                            .fill(Color.appRed)
+                            .frame(width: 12, height: 12)
+                        Text("Checkout")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(.appGray)
+                    }
+                    Spacer()
+                    VStack(spacing: 4) {
+                        Circle()
+                            .fill(vm.route?.entrance == .right ? Color.appRed : Color(hex: "#E0E0E0"))
+                            .frame(width: 12, height: 12)
+                        Text("Entrance")
+                            .font(.system(size: 10, weight: .semibold))
+                            .foregroundColor(.appGray)
+                    }
+                }
+                .frame(height: 40)
+                .padding(.horizontal, 12)
+            }
+            .frame(width: cw, height: ch)
         }
     }
 }
