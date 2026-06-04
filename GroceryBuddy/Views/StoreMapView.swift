@@ -29,6 +29,7 @@ struct StoreMapView: View {
                 )
                 .aspectRatio(mapAspect, contentMode: .fit)
                 .padding(.horizontal, 14)
+                mapEdgeLabels
                 // Add department button (edit mode)
                 if editMode {
                     Button { addDeptOpen = true } label: {
@@ -160,6 +161,25 @@ struct StoreMapView: View {
             Circle().fill(Color(hex: color)).frame(width: 9, height: 9)
             Text(label).font(.system(size: 11)).foregroundColor(.appGray)
         }
+    }
+
+    // MARK: - Map edge labels (below the map border)
+    private var mapEdgeLabels: some View {
+        HStack(spacing: 0) {
+            Text("Entrance")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(vm.route?.entrance == .left ? .appRed : .appGray)
+            Spacer()
+            Text("Checkout")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(.appRed)
+            Spacer()
+            Text("Entrance")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundColor(vm.route?.entrance == .right ? .appRed : .appGray)
+        }
+        .padding(.horizontal, 26)
+        .padding(.top, 6)
     }
 
     // MARK: - Route panel
@@ -406,7 +426,7 @@ private struct MapContentView: View {
     @State private var dragOverrideId: String? = nil
     @State private var dragOverrideLayout: ZoneLayout = ZoneLayout(x:0,y:0,w:0,h:0)
 
-    private let minW = 0.10, minH = 0.08
+    private let minW = 0.10, minH = 0.15
 
     var body: some View {
         let cw = canvasSize.width
@@ -483,41 +503,6 @@ private struct MapContentView: View {
                 RouteOverlayView(route: r, layouts: vm.mapLayout, categories: vm.categories)
                     .frame(width: cw, height: ch)
             }
-
-            VStack(spacing: 0) {
-                Spacer()
-                HStack(spacing: 0) {
-                    VStack(spacing: 4) {
-                        Circle()
-                            .fill(vm.route?.entrance == .left ? Color.appRed : Color(hex: "#E0E0E0"))
-                            .frame(width: 12, height: 12)
-                        Text("Entrance")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundColor(.appGray)
-                    }
-                    Spacer()
-                    VStack(spacing: 4) {
-                        Circle()
-                            .fill(Color.appRed)
-                            .frame(width: 12, height: 12)
-                        Text("Checkout")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundColor(.appGray)
-                    }
-                    Spacer()
-                    VStack(spacing: 4) {
-                        Circle()
-                            .fill(vm.route?.entrance == .right ? Color.appRed : Color(hex: "#E0E0E0"))
-                            .frame(width: 12, height: 12)
-                        Text("Entrance")
-                            .font(.system(size: 10, weight: .semibold))
-                            .foregroundColor(.appGray)
-                    }
-                }
-                .frame(height: 40)
-                .padding(.horizontal, 12)
-            }
-            .frame(width: cw, height: ch)
         }
     }
 }

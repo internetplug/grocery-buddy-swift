@@ -44,15 +44,36 @@ struct ZoneView: View {
                 .overlay(inRoute ? RoundedRectangle(cornerRadius: 10).stroke(Color.appRed, lineWidth: 2) : nil)
                 .opacity(notInRoute ? 0.4 : 1)
 
-            VStack(spacing: 2) {
-                Text(category.emoji).font(.system(size: h > 50 ? 16 : 11))
+            let isVertical = w < 60 && h > w
+            let isCompact = !isVertical && (w * h) < 2000
+            if isVertical {
                 Text(category.name)
-                    .font(.system(size: h > 50 ? 9 : 7, weight: .semibold))
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundColor(isSelected ? .white : Color(hex: category.textColor))
+                    .lineLimit(1)
+                    .truncationMode(.tail)
+                    .frame(width: h, height: w)
+                    .rotationEffect(.degrees(-90))
+                    .frame(width: w, height: h)
+            } else if isCompact {
+                Text(category.name)
+                    .font(.system(size: 7, weight: .semibold))
                     .foregroundColor(isSelected ? .white : Color(hex: category.textColor))
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
+                    .padding(.horizontal, 2)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                VStack(spacing: 2) {
+                    Text(category.emoji).font(.system(size: h > 50 ? 16 : 11))
+                    Text(category.name)
+                        .font(.system(size: h > 50 ? 9 : 7, weight: .semibold))
+                        .foregroundColor(isSelected ? .white : Color(hex: category.textColor))
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
 
             // Stop number badge
             if let n = stopIndex {
