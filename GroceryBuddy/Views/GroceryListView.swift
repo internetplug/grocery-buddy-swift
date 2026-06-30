@@ -4,6 +4,7 @@ struct GroceryListView: View {
     @EnvironmentObject var vm: AppViewModel
     @Binding var authOpen: Bool
     @State private var addOpen = false
+    @State private var listManagerOpen = false
     @State private var filter: Filter = .all
 
     enum Filter: String, CaseIterable { case all, pending, done }
@@ -80,6 +81,9 @@ struct GroceryListView: View {
         .sheet(isPresented: $addOpen) {
             AddItemSheet()
         }
+        .sheet(isPresented: $listManagerOpen) {
+            ItemListManagerSheet()
+        }
     }
 
     private var headerSection: some View {
@@ -136,21 +140,34 @@ struct GroceryListView: View {
                         .clipShape(Capsule())
                     }
 
-                    // Cart icon
-                    ZStack(alignment: .topTrailing) {
-                        RoundedRectangle(cornerRadius: 14)
-                            .fill(Color.white)
-                            .frame(width: 46, height: 46)
-                            .shadow(color: .black.opacity(0.08), radius: 5)
-                            .overlay(Image(systemName: "cart").foregroundColor(.appRed).font(.system(size: 20)))
-                        if totalItems > 0 {
-                            Text(totalItems > 99 ? "99+" : "\(totalItems)")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(.white)
-                                .padding(3)
-                                .background(Color.appRed)
-                                .clipShape(Circle())
-                                .offset(x: 6, y: -6)
+                    HStack(spacing: 8) {
+                        // Saved lists button
+                        Button { listManagerOpen = true } label: {
+                            Image(systemName: "externaldrive.fill")
+                                .font(.system(size: 18))
+                                .foregroundColor(Color(hex: "#5C6BC0"))
+                                .frame(width: 46, height: 46)
+                                .background(Color.white)
+                                .clipShape(RoundedRectangle(cornerRadius: 14))
+                                .shadow(color: .black.opacity(0.08), radius: 5)
+                        }
+
+                        // Cart icon
+                        ZStack(alignment: .topTrailing) {
+                            RoundedRectangle(cornerRadius: 14)
+                                .fill(Color.white)
+                                .frame(width: 46, height: 46)
+                                .shadow(color: .black.opacity(0.08), radius: 5)
+                                .overlay(Image(systemName: "cart").foregroundColor(.appRed).font(.system(size: 20)))
+                            if totalItems > 0 {
+                                Text(totalItems > 99 ? "99+" : "\(totalItems)")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .padding(3)
+                                    .background(Color.appRed)
+                                    .clipShape(Circle())
+                                    .offset(x: 6, y: -6)
+                            }
                         }
                     }
                 }

@@ -13,7 +13,7 @@ struct ContentView: View {
                 if tab == .list {
                     GroceryListView(authOpen: $authOpen)
                 } else {
-                    StoreMapView()
+                    StoreMapView(onSwitchToList: { tab = .list })
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

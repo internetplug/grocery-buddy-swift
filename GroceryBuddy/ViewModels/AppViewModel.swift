@@ -7,6 +7,8 @@ class AppViewModel: ObservableObject {
     @Published var categories: [CustomCategory] = LocalStore.loadCategories()
     @Published var mapLayout: [String: ZoneLayout] = LocalStore.loadMapLayout()
     @Published var savedLayouts: [SavedLayoutSlot] = LocalStore.loadSavedLayouts()
+    @Published var savedItemLists: [SavedItemListSlot] = LocalStore.loadSavedItemLists()
+    @Published var itemHistory: [ItemHistoryEntry] = LocalStore.loadItemHistory()
     @Published var route: RouteState? = nil
     @Published var currentUser: AuthUser? = nil
     @Published var isCheckingSession = true
@@ -22,11 +24,25 @@ class AppViewModel: ObservableObject {
             .throttle(for: .seconds(0.5), scheduler: DispatchQueue.main, latest: true)
             .sink { LocalStore.saveMapLayout($0) }.store(in: &cancellables)
         $savedLayouts.dropFirst().sink { LocalStore.saveSavedLayouts($0) }.store(in: &cancellables)
+        $savedItemLists.dropFirst().sink { LocalStore.saveSavedItemLists($0) }.store(in: &cancellables)
+        $itemHistory.dropFirst().sink { LocalStore.saveItemHistory($0) }.store(in: &cancellables)
 
         // Cloud sync on data change when logged in
         Publishers.CombineLatest4($items, $categories, $mapLayout, $savedLayouts)
             .dropFirst()
             .sink { [weak self] _, _, _, _ in
+                guard let self, self.currentUser != nil else { return }
+                self.sync.scheduleSync(vm: self)
+            }
+            .store(in: &cancellables)
+        $itemHistory.dropFirst()
+            .sink { [weak self] _ in
+                guard let self, self.currentUser != nil else { return }
+                self.sync.scheduleSync(vm: self)
+            }
+            .store(in: &cancellables)
+        $savedItemLists.dropFirst()
+            .sink { [weak self] _ in
                 guard let self, self.currentUser != nil else { return }
                 self.sync.scheduleSync(vm: self)
             }
@@ -45,8 +61,49 @@ class AppViewModel: ObservableObject {
     }
 
     // MARK: - Item actions
-    func addItem(name: String, quantity: String, categoryId: String) {
-        items.insert(GroceryItem.new(name: name, quantity: quantity, categoryId: categoryId), at: 0)
+    func addItem(name: String, categoryId: String) {
+        let trimmed = name.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.isEmpty, !categoryId.isEmpty else { return }
+        recordHistory(name: trimmed, categoryId: categoryId)
+        items.insert(GroceryItem.new(name: trimmed, categoryId: categoryId), at: 0)
+    }
+
+    func incrementItem(_ id: String) {
+        if let i = items.firstIndex(where: { $0.id == id }) {
+            items[i].quantity += 1
+        }
+    }
+
+    func decrementItem(_ id: String) {
+        if let i = items.firstIndex(where: { $0.id == id }) {
+            items[i].quantity = max(1, items[i].quantity - 1)
+        }
+    }
+
+    private func recordHistory(name: String, categoryId: String) {
+        let key = name.lowercased()
+        let now = Date().timeIntervalSince1970 * 1000
+        if let i = itemHistory.firstIndex(where: { $0.categoryId == categoryId && $0.name.lowercased() == key }) {
+            itemHistory[i].count += 1
+            itemHistory[i].lastAddedAt = now
+        } else {
+            itemHistory.append(ItemHistoryEntry(name: name, categoryId: categoryId, count: 1, lastAddedAt: now))
+        }
+    }
+
+    func rankedHistory(for categoryId: String) -> [String] {
+        let now = Date().timeIntervalSince1970 * 1000
+        let weekMs: TimeInterval = 7 * 24 * 60 * 60 * 1000
+        let monthMs: TimeInterval = 30 * 24 * 60 * 60 * 1000
+        return itemHistory
+            .filter { $0.categoryId == categoryId }
+            .map { e -> (String, Double) in
+                let age = now - e.lastAddedAt
+                let boost: Double = age < weekMs ? 2.0 : (age < monthMs ? 1.0 : 0.0)
+                return (e.name, Double(e.count) + boost)
+            }
+            .sorted { $0.1 > $1.1 }
+            .map { $0.0 }
     }
 
     func toggleItem(_ id: String) {
@@ -70,6 +127,12 @@ class AppViewModel: ObservableObject {
 
     func addCategory(_ cat: CustomCategory) {
         categories.append(cat)
+    }
+
+    func updateCategory(_ cat: CustomCategory) {
+        if let idx = categories.firstIndex(where: { $0.id == cat.id }) {
+            categories[idx] = cat
+        }
     }
 
     func deleteCategory(_ id: String) {
@@ -107,6 +170,42 @@ class AppViewModel: ObservableObject {
 
     func clearRoute() { route = nil }
 
+    /// Reorders the category stops in the active route. Checkout is pinned to the end and
+    /// cannot be moved or have other stops moved past it.
+    func moveRouteStops(from source: IndexSet, to destination: Int) {
+        guard var r = route else { return }
+        let lastCatIndex = r.stops.count - 1 // checkout sits here
+        let filteredSources = source.filter { $0 < lastCatIndex }
+        guard !filteredSources.isEmpty else { return }
+        let clampedDest = min(destination, lastCatIndex)
+        r.stops.move(fromOffsets: IndexSet(filteredSources), toOffset: clampedDest)
+        route = r
+    }
+
+    /// Reorders items belonging to a single category. `source` and `destination` are indices
+    /// within that category's filtered list; this translates them back into the global `items` array.
+    func moveItems(in categoryId: String, from source: IndexSet, to destination: Int) {
+        let categoryItemIndices = items.enumerated()
+            .filter { $0.element.categoryId == categoryId }
+            .map { $0.offset }
+        guard !categoryItemIndices.isEmpty else { return }
+
+        let movedGlobalIndices = source.compactMap { idx -> Int? in
+            guard idx < categoryItemIndices.count else { return nil }
+            return categoryItemIndices[idx]
+        }
+        guard !movedGlobalIndices.isEmpty else { return }
+
+        let destGlobal: Int
+        if destination >= categoryItemIndices.count {
+            destGlobal = (categoryItemIndices.last ?? -1) + 1
+        } else {
+            destGlobal = categoryItemIndices[destination]
+        }
+
+        items.move(fromOffsets: IndexSet(movedGlobalIndices), toOffset: destGlobal)
+    }
+
     // MARK: - Map layout
     func updateZone(_ id: String, layout: ZoneLayout) {
         mapLayout[id] = layout
@@ -130,20 +229,51 @@ class AppViewModel: ObservableObject {
     }
 
     func loadLayout(_ slot: SavedLayoutSlot) {
-        var merged = defaultZoneLayouts
-        for (k, v) in slot.layouts { merged[k] = v }
-        mapLayout = merged
+        mapLayout = slot.layouts
 
         var newCategories = defaultCategories.filter { !slot.deletedCategoryIds.contains($0.id) }
         newCategories.append(contentsOf: slot.customCategories)
         categories = newCategories
+
+        let keepIds = Set(newCategories.map { $0.id })
+        items.removeAll { !keepIds.contains($0.categoryId) }
+        if route?.stops.contains(where: { $0 != checkoutId && !keepIds.contains($0) }) == true {
+            route = nil
+        }
     }
 
     func deleteLayout(_ id: String) {
         savedLayouts.removeAll { $0.id == id }
     }
 
+    // MARK: - Saved item lists
+    func saveItemList(name: String) {
+        let slot = SavedItemListSlot(
+            id: UUID().uuidString,
+            name: name,
+            items: items,
+            savedAt: Date().timeIntervalSince1970 * 1000
+        )
+        savedItemLists.insert(slot, at: 0)
+    }
+
+    func loadItemList(_ slot: SavedItemListSlot) {
+        let knownCategoryIds = Set(categories.map { $0.id })
+        items = slot.items.filter { knownCategoryIds.contains($0.categoryId) }
+        if route?.stops.isEmpty == false { route = nil }
+    }
+
+    func deleteItemList(_ id: String) {
+        savedItemLists.removeAll { $0.id == id }
+    }
+
     func resetMapLayout() {
+        let customIds = Set(categories.filter { !$0.builtin }.map { $0.id })
+        if !customIds.isEmpty {
+            categories.removeAll { customIds.contains($0.id) }
+            items.removeAll { customIds.contains($0.categoryId) }
+            if route?.stops.contains(where: { customIds.contains($0) }) == true { route = nil }
+        }
         mapLayout = defaultZoneLayouts
         // Restore any deleted default categories
         for defaultCat in defaultCategories {

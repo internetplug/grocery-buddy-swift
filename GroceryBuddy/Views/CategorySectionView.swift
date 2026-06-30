@@ -34,7 +34,9 @@ struct CategorySectionView: View {
                         Text(category.name)
                             .font(.system(size: 15, weight: .bold))
                             .foregroundColor(.appDark)
-                        Text("\(category.aisle) · \(checkedCount)/\(items.count)")
+                        Text(category.aisle.trimmingCharacters(in: .whitespaces).isEmpty
+                             ? "\(checkedCount)/\(items.count)"
+                             : "\(category.aisle) · \(checkedCount)/\(items.count)")
                             .font(.system(size: 11))
                             .foregroundColor(.appGray)
                     }

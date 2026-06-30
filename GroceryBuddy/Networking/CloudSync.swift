@@ -8,14 +8,19 @@ class CloudSync: ObservableObject {
     func onLogin(vm: AppViewModel) async {
         loaded = false
         if let data = await AuthClient.shared.loadUserData() {
+            let refreshedCategories = LocalStore.refreshBuiltinDescriptions(data.categories)
             vm.items = data.items
-            vm.categories = data.categories
+            vm.categories = refreshedCategories
             vm.mapLayout = data.mapLayout
             vm.savedLayouts = data.savedLayouts
+            vm.itemHistory = data.itemHistory ?? []
+            vm.savedItemLists = data.savedItemLists ?? []
             LocalStore.saveItems(data.items)
-            LocalStore.saveCategories(data.categories)
+            LocalStore.saveCategories(refreshedCategories)
             LocalStore.saveMapLayout(data.mapLayout)
             LocalStore.saveSavedLayouts(data.savedLayouts)
+            LocalStore.saveItemHistory(vm.itemHistory)
+            LocalStore.saveSavedItemLists(vm.savedItemLists)
         }
         loaded = true
     }
@@ -35,7 +40,9 @@ class CloudSync: ObservableObject {
                 items: vm.items,
                 categories: vm.categories,
                 mapLayout: vm.mapLayout,
-                savedLayouts: vm.savedLayouts
+                savedLayouts: vm.savedLayouts,
+                itemHistory: vm.itemHistory,
+                savedItemLists: vm.savedItemLists
             )
             await AuthClient.shared.saveUserData(payload)
         }

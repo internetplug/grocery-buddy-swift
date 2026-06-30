@@ -32,6 +32,11 @@
 		AA000023 /* AccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000023 /* AccountSheet.swift */; };
 		AA000024 /* ColorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000024 /* ColorExtensions.swift */; };
 		AA000025 /* RouteComputer.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000025 /* RouteComputer.swift */; };
+		AA000026 /* ItemHistoryEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000026 /* ItemHistoryEntry.swift */; };
+		AA000027 /* EditDepartmentSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000027 /* EditDepartmentSheet.swift */; };
+		AA000028 /* ReorderSheets.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000028 /* ReorderSheets.swift */; };
+		AA000029 /* SavedItemListSlot.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000029 /* SavedItemListSlot.swift */; };
+		AA000030 /* ItemListManagerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000030 /* ItemListManagerSheet.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -60,6 +65,11 @@
 		AB000023 /* AccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSheet.swift; sourceTree = "<group>"; };
 		AB000024 /* ColorExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtensions.swift; sourceTree = "<group>"; };
 		AB000025 /* RouteComputer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RouteComputer.swift; sourceTree = "<group>"; };
+		AB000026 /* ItemHistoryEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemHistoryEntry.swift; sourceTree = "<group>"; };
+		AB000027 /* EditDepartmentSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EditDepartmentSheet.swift; sourceTree = "<group>"; };
+		AB000028 /* ReorderSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReorderSheets.swift; sourceTree = "<group>"; };
+		AB000029 /* SavedItemListSlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SavedItemListSlot.swift; sourceTree = "<group>"; };
+		AB000030 /* ItemListManagerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ItemListManagerSheet.swift; sourceTree = "<group>"; };
 		AC000001 /* GroceryBuddy.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GroceryBuddy.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -104,6 +114,8 @@
 				AB000004 /* ZoneLayout.swift */,
 				AB000005 /* SavedLayoutSlot.swift */,
 				AB000006 /* RouteState.swift */,
+				AB000026 /* ItemHistoryEntry.swift */,
+				AB000029 /* SavedItemListSlot.swift */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -147,6 +159,9 @@
 				AB000019 /* EntrancePickerSheet.swift */,
 				AB000020 /* LayoutManagerSheet.swift */,
 				AB000021 /* AddDepartmentSheet.swift */,
+				AB000027 /* EditDepartmentSheet.swift */,
+				AB000028 /* ReorderSheets.swift */,
+				AB000030 /* ItemListManagerSheet.swift */,
 				AB000022 /* AuthSheet.swift */,
 				AB000023 /* AccountSheet.swift */,
 			);
@@ -263,6 +278,11 @@
 				AA000023 /* AccountSheet.swift in Sources */,
 				AA000024 /* ColorExtensions.swift in Sources */,
 				AA000025 /* RouteComputer.swift in Sources */,
+				AA000026 /* ItemHistoryEntry.swift in Sources */,
+				AA000027 /* EditDepartmentSheet.swift in Sources */,
+				AA000028 /* ReorderSheets.swift in Sources */,
+				AA000029 /* SavedItemListSlot.swift in Sources */,
+				AA000030 /* ItemListManagerSheet.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -395,7 +415,9 @@
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = BUH2W92RM9;
 				ENABLE_PREVIEWS = YES;
+				API_BASE_URL = "https://grocery-buddy-api.ariel-q64623.workers.dev";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "GroceryBuddy/Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -423,7 +445,9 @@
 				DEVELOPMENT_ASSET_PATHS = "";
 				DEVELOPMENT_TEAM = BUH2W92RM9;
 				ENABLE_PREVIEWS = YES;
+				API_BASE_URL = "https://grocery-buddy-api.ariel-q64623.workers.dev";
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "GroceryBuddy/Info.plist";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

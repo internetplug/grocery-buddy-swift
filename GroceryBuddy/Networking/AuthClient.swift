@@ -12,7 +12,22 @@ struct AuthSession: Codable {
 
 actor AuthClient {
     static let shared = AuthClient()
-    private let base = "https://7gp5taruxq8cii9h38lskaankgn1k1tn.runable.site"
+    private let base: String = {
+        #if targetEnvironment(simulator)
+        // The simulator shares the Mac's network, so talk to the local dev server
+        // (`npm run dev` in grocery-buddy-api). A physical device can't reach the
+        // Mac's localhost, so device/Release builds use APIBaseURL from Info.plist.
+        return "http://localhost:8787"
+        #else
+        // APIBaseURL comes from GroceryBuddy/Info.plist (INFOPLIST_FILE), which
+        // resolves to the deployed Worker URL via the API_BASE_URL build setting.
+        if let url = Bundle.main.object(forInfoDictionaryKey: "APIBaseURL") as? String,
+           !url.isEmpty, !url.contains("REPLACE_ME") {
+            return url.hasSuffix("/") ? String(url.dropLast()) : url
+        }
+        fatalError("APIBaseURL missing — set it in GroceryBuddy/Info.plist (INFOPLIST_FILE)")
+        #endif
+    }()
 
     private var session: URLSession = {
         let config = URLSessionConfiguration.default
@@ -107,6 +122,8 @@ struct CloudData: Codable {
     var categories: [CustomCategory]
     var mapLayout: [String: ZoneLayout]
     var savedLayouts: [SavedLayoutSlot]
+    var itemHistory: [ItemHistoryEntry]? = nil
+    var savedItemLists: [SavedItemListSlot]? = nil
 }
 
 enum AuthError: LocalizedError {

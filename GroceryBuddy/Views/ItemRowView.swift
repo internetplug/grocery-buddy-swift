@@ -23,20 +23,42 @@ struct ItemRowView: View {
             }
             .buttonStyle(.plain)
 
-            VStack(alignment: .leading, spacing: 1) {
-                Text(item.name)
-                    .font(.system(size: 15, weight: .medium))
-                    .foregroundColor(item.checked ? Color(hex: "#C8C8D4") : .appDark)
-                    .strikethrough(item.checked)
-                    .lineLimit(1)
-                if !item.quantity.isEmpty {
-                    Text(item.quantity)
-                        .font(.system(size: 12))
-                        .foregroundColor(.appGray)
-                }
-            }
+            Text(item.name)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(item.checked ? Color(hex: "#C8C8D4") : .appDark)
+                .strikethrough(item.checked)
+                .lineLimit(1)
 
             Spacer()
+
+            // Quantity stepper
+            HStack(spacing: 10) {
+                Button { vm.decrementItem(item.id) } label: {
+                    Image(systemName: "minus")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(item.quantity > 1 ? .appDark : Color(hex: "#C8C8D4"))
+                        .frame(width: 24, height: 24)
+                        .background(Color(hex: "#F2F0ED"))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .disabled(item.quantity <= 1)
+
+                Text("\(item.quantity)")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(.appDark)
+                    .frame(minWidth: 16)
+
+                Button { vm.incrementItem(item.id) } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.appDark)
+                        .frame(width: 24, height: 24)
+                        .background(Color(hex: "#F2F0ED"))
+                        .clipShape(Circle())
+                }
+                .buttonStyle(.plain)
+            }
 
             Button { vm.deleteItem(item.id) } label: {
                 Image(systemName: "xmark")

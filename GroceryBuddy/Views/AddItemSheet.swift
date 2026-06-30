@@ -5,7 +5,6 @@ struct AddItemSheet: View {
     @Environment(\.dismiss) var dismiss
 
     @State private var name = ""
-    @State private var quantity = ""
     @State private var selectedCategoryId: String?
 
     private var categories: [CustomCategory] { vm.categories }
@@ -16,11 +15,19 @@ struct AddItemSheet: View {
 
     private var suggestions: [String] {
         let id = selectedCategoryId ?? categories.first?.id ?? ""
-        let all = categoryItems[id] ?? []
-        if name.count > 1 {
-            return Array(all.filter { $0.lowercased().contains(name.lowercased()) }.prefix(8))
+        guard !id.isEmpty else { return [] }
+        let history = vm.rankedHistory(for: id)
+        let curated = categoryItems[id] ?? []
+        var seen = Set<String>()
+        var merged: [String] = []
+        for n in history + curated {
+            let k = n.lowercased()
+            if seen.insert(k).inserted { merged.append(n) }
         }
-        return Array(all.prefix(8))
+        let filtered = name.count > 1
+            ? merged.filter { $0.lowercased().contains(name.lowercased()) }
+            : merged
+        return Array(filtered.prefix(8))
     }
 
     var body: some View {
@@ -49,7 +56,7 @@ struct AddItemSheet: View {
                     .padding(.horizontal, 8)
                     .padding(.bottom, 8)
 
-                    if let cat = activeCategory {
+                    if let cat = activeCategory, !cat.aisle.trimmingCharacters(in: .whitespaces).isEmpty {
                         Text("📍 \(cat.aisle)")
                             .font(.system(size: 11, weight: .medium))
                             .foregroundColor(Color(hex: cat.textColor))
@@ -77,7 +84,12 @@ struct AddItemSheet: View {
                         let columns = [GridItem(.adaptive(minimum: 100))]
                         LazyVGrid(columns: columns, spacing: 8) {
                             ForEach(suggestions, id: \.self) { s in
-                                Button { name = s } label: {
+                                Button {
+                                    guard let cat = activeCategory else { return }
+                                    vm.addItem(name: s, categoryId: cat.id)
+                                    name = ""
+                                    dismiss()
+                                } label: {
                                     Text(s)
                                         .font(.system(size: 12))
                                         .foregroundColor(activeCategory.map { Color(hex: $0.textColor) } ?? .appGray)
@@ -92,24 +104,12 @@ struct AddItemSheet: View {
                         .padding(.bottom, 8)
                     }
 
-                    // Quantity
-                    label("Quantity (optional)")
-                    TextField("e.g. 2 lbs, 1 bag, 3 cans", text: $quantity)
-                        .textFieldStyle(.plain)
-                        .padding(12)
-                        .background(Color(hex: "#F7F5F2"))
-                        .clipShape(RoundedRectangle(cornerRadius: 14))
-                        .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color(hex: "#ECECEC"), lineWidth: 1.5))
-                        .padding(.horizontal, 20)
-                        .padding(.bottom, 24)
-                        .submitLabel(.done)
-
                     // Add button
                     Button {
                         let t = name.trimmingCharacters(in: .whitespaces)
                         guard !t.isEmpty, let cat = activeCategory else { return }
-                        vm.addItem(name: t, quantity: quantity.trimmingCharacters(in: .whitespaces), categoryId: cat.id)
-                        name = ""; quantity = ""
+                        vm.addItem(name: t, categoryId: cat.id)
+                        name = ""
                         dismiss()
                     } label: {
                         Text("Add to List")

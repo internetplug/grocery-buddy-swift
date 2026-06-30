@@ -18,8 +18,21 @@ struct LocalStore {
     static func loadCategories() -> [CustomCategory] {
         guard let data = UserDefaults.standard.data(forKey: "gb_categories"),
               let cats = try? decoder.decode([CustomCategory].self, from: data) else { return defaultCategories }
-        return cats
+        return refreshBuiltinDescriptions(cats)
     }
+
+    // Built-in descriptions are code-owned: replace `aisle` on any built-in
+    // category with the value from defaultCategories. Custom categories pass through.
+    static func refreshBuiltinDescriptions(_ cats: [CustomCategory]) -> [CustomCategory] {
+        let defaultsById = Dictionary(uniqueKeysWithValues: defaultCategories.map { ($0.id, $0) })
+        return cats.map { cat in
+            guard cat.builtin, let def = defaultsById[cat.id] else { return cat }
+            var updated = cat
+            updated.aisle = def.aisle
+            return updated
+        }
+    }
+
     static func saveCategories(_ cats: [CustomCategory]) {
         UserDefaults.standard.set(try? encoder.encode(cats), forKey: "gb_categories")
     }
@@ -42,5 +55,25 @@ struct LocalStore {
     }
     static func saveSavedLayouts(_ slots: [SavedLayoutSlot]) {
         UserDefaults.standard.set(try? encoder.encode(slots), forKey: "gb_saved_layouts")
+    }
+
+    // MARK: - Saved Item Lists
+    static func loadSavedItemLists() -> [SavedItemListSlot] {
+        guard let data = UserDefaults.standard.data(forKey: "gb_saved_item_lists"),
+              let slots = try? decoder.decode([SavedItemListSlot].self, from: data) else { return [] }
+        return slots
+    }
+    static func saveSavedItemLists(_ slots: [SavedItemListSlot]) {
+        UserDefaults.standard.set(try? encoder.encode(slots), forKey: "gb_saved_item_lists")
+    }
+
+    // MARK: - Item History
+    static func loadItemHistory() -> [ItemHistoryEntry] {
+        guard let data = UserDefaults.standard.data(forKey: "gb_item_history"),
+              let h = try? decoder.decode([ItemHistoryEntry].self, from: data) else { return [] }
+        return h
+    }
+    static func saveItemHistory(_ h: [ItemHistoryEntry]) {
+        UserDefaults.standard.set(try? encoder.encode(h), forKey: "gb_item_history")
     }
 }

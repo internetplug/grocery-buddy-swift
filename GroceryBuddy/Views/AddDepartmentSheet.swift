@@ -75,8 +75,8 @@ struct AddDepartmentSheet: View {
                         .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.appBorder, lineWidth: 1.5))
                         .padding(.horizontal, 20).padding(.bottom, 16)
 
-                    label("Aisle / Location (optional)")
-                    TextField("e.g. Aisle 12, Back Wall", text: $aisle)
+                    label("Description (optional)")
+                    TextField("e.g. Frozen goods, Pantry staples", text: $aisle)
                         .textFieldStyle(.plain).padding(12)
                         .background(Color(hex: "#F7F5F2"))
                         .clipShape(RoundedRectangle(cornerRadius: 14))
@@ -147,7 +147,7 @@ struct AddDepartmentSheet: View {
                             id: "cat_\(UUID().uuidString.prefix(8).lowercased())",
                             name: t,
                             emoji: selectedEmoji,
-                            aisle: aisle.trimmingCharacters(in: .whitespaces).isEmpty ? "Custom Aisle" : aisle,
+                            aisle: aisle.trimmingCharacters(in: .whitespaces),
                             color: palette.color,
                             textColor: palette.textColor,
                             accentColor: palette.accentColor,
