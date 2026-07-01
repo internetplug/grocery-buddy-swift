@@ -5,6 +5,7 @@ struct GroceryListView: View {
     @Binding var authOpen: Bool
     @State private var addOpen = false
     @State private var listManagerOpen = false
+    @State private var clearAllConfirm = false
     @State private var filter: Filter = .all
 
     enum Filter: String, CaseIterable { case all, pending, done }
@@ -83,6 +84,14 @@ struct GroceryListView: View {
         }
         .sheet(isPresented: $listManagerOpen) {
             ItemListManagerSheet()
+        }
+        .alert("Clear entire list?", isPresented: $clearAllConfirm) {
+            Button("Clear \(totalItems) item\(totalItems == 1 ? "" : "s")", role: .destructive) {
+                vm.clearAll()
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            Text("This removes every item from your list. This can't be undone.")
         }
     }
 
@@ -215,6 +224,14 @@ struct GroceryListView: View {
                         .foregroundColor(.appRed)
                         .padding(.horizontal, 12).padding(.vertical, 7)
                         .overlay(Capsule().stroke(Color(hex: "#FFCDD2"), lineWidth: 1.5))
+                }
+                if totalItems > 0 {
+                    Button("Clear all") { clearAllConfirm = true }
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 12).padding(.vertical, 7)
+                        .background(Color.appRed)
+                        .clipShape(Capsule())
                 }
             }
         }

@@ -120,6 +120,10 @@ class AppViewModel: ObservableObject {
         items.removeAll { $0.checked }
     }
 
+    func clearAll() {
+        items.removeAll()
+    }
+
     // MARK: - Category actions
     func updateCategories(_ cats: [CustomCategory]) {
         categories = cats
