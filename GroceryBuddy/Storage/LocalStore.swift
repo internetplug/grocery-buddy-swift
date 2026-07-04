@@ -106,6 +106,11 @@ struct LocalStore {
     static func saveLastAccountId(_ id: String) {
         UserDefaults.standard.set(id, forKey: "gb_last_account_id")
     }
+    // Called when the account is deleted: the device's data no longer belongs
+    // to any account, so it may merge into whichever account signs in next.
+    static func clearLastAccountId() {
+        UserDefaults.standard.removeObject(forKey: "gb_last_account_id")
+    }
 
     // MARK: - Item History
     static func loadItemHistory() -> [ItemHistoryEntry] {

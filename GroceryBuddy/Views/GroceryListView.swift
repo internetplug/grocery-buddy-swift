@@ -135,7 +135,7 @@ struct GroceryListView: View {
                                         }
                                     }
                                 )
-                            Text(vm.isLoggedIn ? (vm.currentUser?.email.components(separatedBy: "@").first ?? "Account") : "Sign in")
+                            Text(vm.isLoggedIn ? (vm.currentUser?.name ?? "Account") : "Sign in")
                                 .font(.system(size: 12, weight: .semibold))
                                 .foregroundColor(vm.isLoggedIn ? .appRed : .appGray)
                                 .lineLimit(1)

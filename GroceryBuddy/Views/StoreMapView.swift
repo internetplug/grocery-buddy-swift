@@ -458,6 +458,27 @@ private struct MapCanvasView: View {
             )
             .shadow(color: .black.opacity(0.07), radius: 8, y: 2)
             .contentShape(Rectangle())
+            // Attached as a simultaneous gesture: the enclosing ScrollView's pan
+            // recognizer otherwise claims the touch and cancels a plain .gesture
+            // drag, so updating never fires and the pan snaps once on finger-lift.
+            // Simultaneity keeps live translation flowing; scrollDisabled(isZoomed)
+            // upstream prevents the page from scrolling at the same time.
+            .simultaneousGesture(
+                DragGesture()
+                    .updating($panDelta) { value, state, _ in
+                        state = value.translation
+                    }
+                    .onEnded { value in
+                        basePan = clampPan(
+                            CGSize(width: basePan.width + value.translation.width,
+                                   height: basePan.height + value.translation.height),
+                            scale: zoomScale, viewW: canvasW, viewH: canvasH
+                        )
+                    },
+                including: zoomScale > 1 ? .gesture : .subviews
+            )
+            // Attached outside the pan drag so the pan's .gesture mask (active
+            // while zoomed) can't disable pinching back out.
             .simultaneousGesture(
                 MagnificationGesture()
                     .onChanged { value in
@@ -474,20 +495,6 @@ private struct MapCanvasView: View {
                             isPinching = false
                         }
                     }
-            )
-            .gesture(
-                DragGesture()
-                    .updating($panDelta) { value, state, _ in
-                        state = value.translation
-                    }
-                    .onEnded { value in
-                        basePan = clampPan(
-                            CGSize(width: basePan.width + value.translation.width,
-                                   height: basePan.height + value.translation.height),
-                            scale: zoomScale, viewW: canvasW, viewH: canvasH
-                        )
-                    },
-                including: zoomScale > 1 ? .gesture : .subviews
             )
             .overlay(alignment: .topTrailing) {
                 if zoomScale > 1 {

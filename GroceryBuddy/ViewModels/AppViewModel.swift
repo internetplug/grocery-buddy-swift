@@ -205,6 +205,29 @@ class AppViewModel: ObservableObject {
         LocalStore.saveUser(nil)
     }
 
+    func updateName(_ name: String) async throws {
+        try await AuthClient.shared.updateName(name)
+        if var user = currentUser {
+            user.name = name
+            currentUser = user
+            LocalStore.saveUser(user)
+        }
+    }
+
+    func changePassword(current: String, new: String) async throws {
+        try await AuthClient.shared.changePassword(current: current, new: new)
+    }
+
+    /// Deletes the account and its cloud data on the server, then returns this
+    /// device to the signed-out state. Local list data stays on the device.
+    func deleteAccount(password: String) async throws {
+        try await AuthClient.shared.deleteAccount(password: password)
+        sync.onLogout()
+        currentUser = nil
+        LocalStore.saveUser(nil)
+        LocalStore.clearLastAccountId()
+    }
+
     // MARK: - Route
     func planRoute(entrance: RouteState.Entrance) {
         let pending = Set(items.filter { !$0.checked }.map { $0.categoryId })
