@@ -31,7 +31,7 @@ actor AuthClient {
 
     private var session: URLSession = {
         let config = URLSessionConfiguration.default
-        config.httpCookieAcceptPolicy = .always
+        config.httpCookieAcceptPolicy = .onlyFromMainDocumentDomain
         config.httpShouldSetCookies = true
         config.httpCookieStorage = HTTPCookieStorage.shared
         return URLSession(configuration: config)
@@ -70,44 +70,67 @@ actor AuthClient {
     }
 
     // MARK: - Sign Out
-    func signOut() async throws {
+    /// Returns true if the server confirmed the revocation. Cookies for the API
+    /// host are cleared locally either way (other hosts' cookies are untouched).
+    @discardableResult
+    func signOut() async -> Bool {
         let url = URL(string: "\(base)/api/auth/sign-out")!
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        _ = try? await session.data(for: req)
-        HTTPCookieStorage.shared.removeCookies(since: .distantPast)
+        let result = try? await session.data(for: req)
+        for cookie in HTTPCookieStorage.shared.cookies(for: url) ?? [] {
+            HTTPCookieStorage.shared.deleteCookie(cookie)
+        }
+        guard let http = result?.1 as? HTTPURLResponse else { return false }
+        return (200..<300).contains(http.statusCode)
     }
 
     // MARK: - Get Session
-    func getSession() async -> AuthUser? {
+    enum SessionCheck {
+        case signedIn(AuthUser)
+        case signedOut
+        case unreachable  // network failure — the session may still be valid
+    }
+
+    func getSession() async -> SessionCheck {
         let url = URL(string: "\(base)/api/auth/get-session")!
         var req = URLRequest(url: url)
         req.httpMethod = "GET"
         guard let (data, resp) = try? await session.data(for: req),
-              let http = resp as? HTTPURLResponse, http.statusCode == 200,
-              let result = try? JSONDecoder().decode(SessionResponse.self, from: data) else { return nil }
-        return result.user
+              let http = resp as? HTTPURLResponse else { return .unreachable }
+        guard http.statusCode == 200,
+              let result = try? JSONDecoder().decode(SessionResponse.self, from: data),
+              let user = result.user else { return .signedOut }
+        return .signedIn(user)
     }
 
     // MARK: - User Data
-    func loadUserData() async -> CloudData? {
+    /// Returns nil when the account has no stored data yet; throws when the
+    /// request fails, so callers can tell "empty account" from "unreachable".
+    func loadUserData() async throws -> CloudData? {
         let url = URL(string: "\(base)/api/user-data")!
         var req = URLRequest(url: url)
         req.httpMethod = "GET"
-        guard let (data, resp) = try? await session.data(for: req),
-              let http = resp as? HTTPURLResponse, http.statusCode == 200,
-              let wrapper = try? JSONDecoder().decode(UserDataResponse.self, from: data) else { return nil }
+        let (data, resp) = try await session.data(for: req)
+        guard let http = resp as? HTTPURLResponse, http.statusCode == 200,
+              let wrapper = try? JSONDecoder().decode(UserDataResponse.self, from: data) else {
+            throw AuthError.message("Could not load your data")
+        }
         return wrapper.data
     }
 
-    func saveUserData(_ payload: CloudData) async {
+    @discardableResult
+    func saveUserData(_ payload: CloudData) async -> Bool {
         let url = URL(string: "\(base)/api/user-data")!
         var req = URLRequest(url: url)
         req.httpMethod = "POST"
         req.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        req.httpBody = try? JSONEncoder().encode(payload)
-        _ = try? await session.data(for: req)
+        guard let body = try? JSONEncoder().encode(payload) else { return false }
+        req.httpBody = body
+        guard let (_, resp) = try? await session.data(for: req),
+              let http = resp as? HTTPURLResponse else { return false }
+        return (200..<300).contains(http.statusCode)
     }
 }
 
@@ -117,7 +140,7 @@ private struct SignInResponse: Codable { var user: AuthUser }
 private struct SessionResponse: Codable { var user: AuthUser? }
 private struct UserDataResponse: Codable { var data: CloudData? }
 
-struct CloudData: Codable {
+struct CloudData: Codable, Equatable {
     var items: [GroceryItem]
     var categories: [CustomCategory]
     var mapLayout: [String: ZoneLayout]

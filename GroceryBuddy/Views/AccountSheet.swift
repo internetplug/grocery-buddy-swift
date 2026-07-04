@@ -9,6 +9,23 @@ struct AccountSheet: View {
         return String(src.prefix(1)).uppercased()
     }
 
+    private var syncBanner: (icon: String, text: String, tint: Color, bg: Color) {
+        switch vm.sync.status {
+        case .synced:
+            return ("checkmark.circle.fill", "Your list & map are synced to the cloud",
+                    .appGreen, Color(hex: "#F0FFF4"))
+        case .syncing:
+            return ("arrow.triangle.2.circlepath", "Syncing your changes…",
+                    .appGray, Color(hex: "#F7F5F2"))
+        case .failed:
+            return ("exclamationmark.triangle.fill", "Couldn't sync — will retry automatically",
+                    .appRed, Color(hex: "#FFF0F1"))
+        case .idle:
+            return ("icloud", "Waiting to sync",
+                    .appGray, Color(hex: "#F7F5F2"))
+        }
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -30,13 +47,13 @@ struct AccountSheet: View {
 
                 // Sync status
                 HStack(spacing: 8) {
-                    Image(systemName: "checkmark.circle.fill").foregroundColor(.appGreen)
-                    Text("Your list & map are synced to the cloud")
-                        .font(.system(size: 13)).foregroundColor(Color(hex: "#2E7D32"))
+                    Image(systemName: syncBanner.icon).foregroundColor(syncBanner.tint)
+                    Text(syncBanner.text)
+                        .font(.system(size: 13)).foregroundColor(syncBanner.tint)
                 }
                 .padding(.horizontal, 14).padding(.vertical, 10)
-                .background(Color(hex: "#F0FFF4"))
-                .overlay(RoundedRectangle(cornerRadius: 14).stroke(Color.appGreen.opacity(0.3), lineWidth: 1.5))
+                .background(syncBanner.bg)
+                .overlay(RoundedRectangle(cornerRadius: 14).stroke(syncBanner.tint.opacity(0.3), lineWidth: 1.5))
                 .clipShape(RoundedRectangle(cornerRadius: 14))
                 .padding(.horizontal, 20).padding(.bottom, 28)
 

@@ -99,11 +99,8 @@ struct GroceryListView: View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("GroceryBuddy")
+                    (Text("Grocery").foregroundColor(.appDark) + Text("Buddy").foregroundColor(.appRed))
                         .font(.system(size: 27, weight: .black))
-                        .foregroundColor(.appDark)
-                        .overlay(Text("Grocery").font(.system(size: 27, weight: .black)).foregroundColor(.appDark) +
-                                 Text("Buddy").font(.system(size: 27, weight: .black)).foregroundColor(.appRed), alignment: .leading)
                     Text("\(checkedItems)/\(totalItems) items checked off")
                         .font(.system(size: 12))
                         .foregroundColor(.appGray)

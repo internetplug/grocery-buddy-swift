@@ -113,9 +113,8 @@ struct StoreMapView: View {
     private var headerSection: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .center) {
-                Text("StoreMap").font(.system(size: 27, weight: .black)).foregroundColor(.appDark)
-                    .overlay(Text("Store").font(.system(size: 27, weight: .black)).foregroundColor(.appDark) +
-                             Text("Map").font(.system(size: 27, weight: .black)).foregroundColor(.appRed), alignment: .leading)
+                (Text("Store").foregroundColor(.appDark) + Text("Map").foregroundColor(.appRed))
+                    .font(.system(size: 27, weight: .black))
                 Spacer()
                 HStack(spacing: 8) {
                     // Layouts button
@@ -501,6 +500,7 @@ private struct MapCanvasView: View {
                             .clipShape(RoundedRectangle(cornerRadius: 10))
                             .shadow(color: .black.opacity(0.12), radius: 3, y: 1)
                     }
+                    .accessibilityLabel("Reset map zoom")
                     .padding(10)
                 }
             }

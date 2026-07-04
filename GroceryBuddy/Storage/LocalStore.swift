@@ -67,6 +67,46 @@ struct LocalStore {
         UserDefaults.standard.set(try? encoder.encode(slots), forKey: "gb_saved_item_lists")
     }
 
+    // MARK: - Route
+    static func loadRoute() -> RouteState? {
+        guard let data = UserDefaults.standard.data(forKey: "gb_route"),
+              let route = try? decoder.decode(RouteState.self, from: data) else { return nil }
+        return route
+    }
+    static func saveRoute(_ route: RouteState?) {
+        if let route {
+            UserDefaults.standard.set(try? encoder.encode(route), forKey: "gb_route")
+        } else {
+            UserDefaults.standard.removeObject(forKey: "gb_route")
+        }
+    }
+
+    // MARK: - Cached auth user
+    // Last-known signed-in user, so an offline launch still shows the account
+    // instead of flashing the signed-out state.
+    static func loadUser() -> AuthUser? {
+        guard let data = UserDefaults.standard.data(forKey: "gb_user"),
+              let user = try? decoder.decode(AuthUser.self, from: data) else { return nil }
+        return user
+    }
+    static func saveUser(_ user: AuthUser?) {
+        if let user {
+            UserDefaults.standard.set(try? encoder.encode(user), forKey: "gb_user")
+        } else {
+            UserDefaults.standard.removeObject(forKey: "gb_user")
+        }
+    }
+
+    // Survives sign-out: used to decide whether local data may be merged into
+    // the account that signs in next (only if it's the same account, or none
+    // was ever signed in on this device).
+    static func lastAccountId() -> String? {
+        UserDefaults.standard.string(forKey: "gb_last_account_id")
+    }
+    static func saveLastAccountId(_ id: String) {
+        UserDefaults.standard.set(id, forKey: "gb_last_account_id")
+    }
+
     // MARK: - Item History
     static func loadItemHistory() -> [ItemHistoryEntry] {
         guard let data = UserDefaults.standard.data(forKey: "gb_item_history"),

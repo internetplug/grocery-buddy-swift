@@ -28,6 +28,7 @@
 		AA000019 /* EntrancePickerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000019 /* EntrancePickerSheet.swift */; };
 		AA000020 /* LayoutManagerSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000020 /* LayoutManagerSheet.swift */; };
 		AA000021 /* AddDepartmentSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000021 /* AddDepartmentSheet.swift */; };
+		AA000031 /* DepartmentStyle.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000031 /* DepartmentStyle.swift */; };
 		AA000022 /* AuthSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000022 /* AuthSheet.swift */; };
 		AA000023 /* AccountSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000023 /* AccountSheet.swift */; };
 		AA000024 /* ColorExtensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB000024 /* ColorExtensions.swift */; };
@@ -61,6 +62,7 @@
 		AB000019 /* EntrancePickerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = EntrancePickerSheet.swift; sourceTree = "<group>"; };
 		AB000020 /* LayoutManagerSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LayoutManagerSheet.swift; sourceTree = "<group>"; };
 		AB000021 /* AddDepartmentSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AddDepartmentSheet.swift; sourceTree = "<group>"; };
+		AB000031 /* DepartmentStyle.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DepartmentStyle.swift; sourceTree = "<group>"; };
 		AB000022 /* AuthSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AuthSheet.swift; sourceTree = "<group>"; };
 		AB000023 /* AccountSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountSheet.swift; sourceTree = "<group>"; };
 		AB000024 /* ColorExtensions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ColorExtensions.swift; sourceTree = "<group>"; };
@@ -159,6 +161,7 @@
 				AB000019 /* EntrancePickerSheet.swift */,
 				AB000020 /* LayoutManagerSheet.swift */,
 				AB000021 /* AddDepartmentSheet.swift */,
+				AB000031 /* DepartmentStyle.swift */,
 				AB000027 /* EditDepartmentSheet.swift */,
 				AB000028 /* ReorderSheets.swift */,
 				AB000030 /* ItemListManagerSheet.swift */,
@@ -274,6 +277,7 @@
 				AA000019 /* EntrancePickerSheet.swift in Sources */,
 				AA000020 /* LayoutManagerSheet.swift in Sources */,
 				AA000021 /* AddDepartmentSheet.swift in Sources */,
+				AA000031 /* DepartmentStyle.swift in Sources */,
 				AA000022 /* AuthSheet.swift in Sources */,
 				AA000023 /* AccountSheet.swift in Sources */,
 				AA000024 /* ColorExtensions.swift in Sources */,

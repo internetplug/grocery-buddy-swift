@@ -12,8 +12,8 @@ struct EntrancePickerSheet: View {
                     .foregroundColor(.appGray)
 
                 HStack(spacing: 16) {
-                    entranceButton(.left,  label: "Left Entrance",  sub: "West / Pharmacy side")
-                    entranceButton(.right, label: "Right Entrance", sub: "East / Bakery side")
+                    entranceButton(.left,  label: "Left Entrance",  sub: "Bottom-left of your map")
+                    entranceButton(.right, label: "Right Entrance", sub: "Bottom-right of your map")
                 }
                 .padding(.horizontal, 20)
 

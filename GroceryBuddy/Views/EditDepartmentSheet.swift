@@ -1,33 +1,5 @@
 import SwiftUI
 
-private let editDeptDefaultEmojis = defaultCategories.map { $0.emoji }
-private let editDeptCustomEmojis = ["🛒","🏪","🧺","🫙","🥡","🫕","🥗","🧆","🍱","🥘","🧇","🥞","🍳","🧈","🫒","🌿","🌾","🫚","🍶","🧋","🥤","🍵","☕","🍺","🍻","🧴","🪥","🧼","🪒","🧽","🪣","🧹","🪴","🌸","🐠","🐕","🐈","📦","🪑","💡","🔋","🧲","🛠️"]
-
-private let editDeptAllColors: [(color: String, textColor: String, accentColor: String)] = {
-    var seen = Set<String>()
-    var colors: [(color: String, textColor: String, accentColor: String)] = []
-    for cat in defaultCategories {
-        if !seen.contains(cat.color) {
-            colors.append((color: cat.color, textColor: cat.textColor, accentColor: cat.accentColor))
-            seen.insert(cat.color)
-        }
-    }
-    let additionalColors: [(color: String, textColor: String, accentColor: String)] = [
-        ("#FFCDD2", "#C62828", "#E53935"),
-        ("#C8E6C9", "#2E7D32", "#43A047"),
-        ("#FFCCBC", "#D84315", "#FF7043"),
-        ("#D1C4E9", "#512DA8", "#7E57C2"),
-        ("#B2DFDB", "#00695C", "#00897B")
-    ]
-    for color in additionalColors {
-        if !seen.contains(color.color) {
-            colors.append(color)
-            seen.insert(color.color)
-        }
-    }
-    return colors
-}()
-
 struct EditDepartmentSheet: View {
     @EnvironmentObject var vm: AppViewModel
     @Environment(\.dismiss) var dismiss
@@ -132,11 +104,11 @@ private struct DepartmentEditorView: View {
         _name = State(initialValue: category.name)
         _aisle = State(initialValue: category.aisle)
         _selectedEmoji = State(initialValue: category.emoji)
-        let idx = editDeptAllColors.firstIndex(where: { $0.accentColor == category.accentColor }) ?? 0
+        let idx = departmentColorOptions.firstIndex(where: { $0.accentColor == category.accentColor }) ?? 0
         _colorIdx = State(initialValue: idx)
     }
 
-    private var palette: (color: String, textColor: String, accentColor: String) { editDeptAllColors[colorIdx] }
+    private var palette: (color: String, textColor: String, accentColor: String) { departmentColorOptions[colorIdx] }
 
     var body: some View {
         ScrollView {
@@ -176,59 +148,11 @@ private struct DepartmentEditorView: View {
                 }
 
                 label("Icon")
-
-                if !editDeptDefaultEmojis.isEmpty {
-                    Text("Default Departments")
-                        .font(.system(size: 11, weight: .semibold)).foregroundColor(.appGray)
-                        .padding(.horizontal, 20).padding(.bottom, 8)
-                    LazyVGrid(columns: Array(repeating: GridItem(.fixed(40), spacing: 8), count: 8), spacing: 8) {
-                        ForEach(editDeptDefaultEmojis, id: \.self) { e in
-                            Button { selectedEmoji = e } label: {
-                                Text(e).font(.system(size: 20))
-                                    .frame(width: 38, height: 38)
-                                    .background(selectedEmoji == e ? Color(hex: palette.color) : Color(hex: "#F7F5F2"))
-                                    .clipShape(RoundedRectangle(cornerRadius: 10))
-                                    .overlay(selectedEmoji == e
-                                        ? RoundedRectangle(cornerRadius: 10).stroke(Color(hex: palette.accentColor), lineWidth: 2)
-                                        : RoundedRectangle(cornerRadius: 10).stroke(Color.appBorder, lineWidth: 1.5))
-                            }
-                        }
-                    }
-                    .padding(.horizontal, 20).padding(.bottom, 16)
-                }
-
-                Text("Other Icons")
-                    .font(.system(size: 11, weight: .semibold)).foregroundColor(.appGray)
-                    .padding(.horizontal, 20).padding(.bottom, 8)
-                LazyVGrid(columns: Array(repeating: GridItem(.fixed(40), spacing: 8), count: 8), spacing: 8) {
-                    ForEach(editDeptCustomEmojis, id: \.self) { e in
-                        Button { selectedEmoji = e } label: {
-                            Text(e).font(.system(size: 20))
-                                .frame(width: 38, height: 38)
-                                .background(selectedEmoji == e ? Color(hex: palette.color) : Color(hex: "#F7F5F2"))
-                                .clipShape(RoundedRectangle(cornerRadius: 10))
-                                .overlay(selectedEmoji == e
-                                    ? RoundedRectangle(cornerRadius: 10).stroke(Color(hex: palette.accentColor), lineWidth: 2)
-                                    : RoundedRectangle(cornerRadius: 10).stroke(Color.appBorder, lineWidth: 1.5))
-                        }
-                    }
-                }
-                .padding(.horizontal, 20).padding(.bottom, 18)
+                DepartmentIconPicker(selectedEmoji: $selectedEmoji, palette: palette)
 
                 label("Color")
-                LazyVGrid(columns: Array(repeating: GridItem(.fixed(40), spacing: 12), count: 6), spacing: 12) {
-                    ForEach(editDeptAllColors.indices, id: \.self) { i in
-                        Button { colorIdx = i } label: {
-                            Circle()
-                                .fill(Color(hex: editDeptAllColors[i].accentColor))
-                                .frame(width: 38, height: 38)
-                                .overlay(colorIdx == i
-                                    ? Circle().stroke(Color.appDark, lineWidth: 3)
-                                    : Circle().stroke(Color.clear, lineWidth: 2))
-                        }
-                    }
-                }
-                .padding(.horizontal, 20).padding(.bottom, 24)
+                DepartmentColorPicker(colorIdx: $colorIdx)
+                    .padding(.horizontal, 20).padding(.bottom, 24)
 
                 Button {
                     let t = name.trimmingCharacters(in: .whitespaces)

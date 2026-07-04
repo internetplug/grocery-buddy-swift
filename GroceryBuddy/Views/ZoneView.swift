@@ -105,6 +105,7 @@ struct ZoneView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
                 .padding(2)
                 .buttonStyle(.plain)
+                .accessibilityLabel("Delete \(category.name) department")
             }
 
             // Resize handle (active in edit mode only)

@@ -13,7 +13,11 @@ struct AuthSheet: View {
 
     enum Mode { case signIn, signUp }
 
-    var canSubmit: Bool { !email.isEmpty && !password.isEmpty && !loading }
+    private var trimmedEmail: String {
+        email.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    var canSubmit: Bool { !trimmedEmail.isEmpty && !password.isEmpty && !loading }
 
     var body: some View {
         NavigationStack {
@@ -46,6 +50,8 @@ struct AuthSheet: View {
                     label("Password")
                     SecureField(mode == .signUp ? "Min 8 characters" : "Your password", text: $password)
                         .textContentType(mode == .signUp ? .newPassword : .password)
+                        .submitLabel(.go)
+                        .onSubmit { if canSubmit { Task { await submit() } } }
                         .fieldStyle()
                         .padding(.horizontal, 20)
                         .padding(.bottom, 20)
@@ -99,14 +105,22 @@ struct AuthSheet: View {
 
     private func submit() async {
         error = ""
+        guard trimmedEmail.contains("@"), trimmedEmail.contains(".") else {
+            error = "Enter a valid email address."
+            return
+        }
+        if mode == .signUp && password.count < 8 {
+            error = "Password must be at least 8 characters."
+            return
+        }
         loading = true
         do {
             if mode == .signIn {
-                try await vm.signIn(email: email, password: password)
+                try await vm.signIn(email: trimmedEmail, password: password)
             } else {
                 let n = name.trimmingCharacters(in: .whitespaces)
-                try await vm.signUp(email: email, password: password,
-                                    name: n.isEmpty ? String(email.split(separator: "@").first ?? "") : n)
+                try await vm.signUp(email: trimmedEmail, password: password,
+                                    name: n.isEmpty ? String(trimmedEmail.split(separator: "@").first ?? "") : n)
             }
             dismiss()
         } catch {

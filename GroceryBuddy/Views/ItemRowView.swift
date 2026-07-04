@@ -22,6 +22,7 @@ struct ItemRowView: View {
                 .animation(.easeInOut(duration: 0.2), value: item.checked)
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(item.checked ? "Mark \(item.name) as not picked up" : "Mark \(item.name) as picked up")
 
             Text(item.name)
                 .font(.system(size: 15, weight: .medium))
@@ -43,6 +44,7 @@ struct ItemRowView: View {
                 }
                 .buttonStyle(.plain)
                 .disabled(item.quantity <= 1)
+                .accessibilityLabel("Decrease quantity of \(item.name)")
 
                 Text("\(item.quantity)")
                     .font(.system(size: 14, weight: .semibold))
@@ -58,6 +60,7 @@ struct ItemRowView: View {
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
+                .accessibilityLabel("Increase quantity of \(item.name)")
             }
 
             Button { vm.deleteItem(item.id) } label: {
@@ -66,6 +69,7 @@ struct ItemRowView: View {
                     .foregroundColor(Color(hex: "#C8C8D4"))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel("Delete \(item.name)")
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)

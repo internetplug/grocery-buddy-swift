@@ -10,7 +10,7 @@ struct GroceryItem: Identifiable, Codable, Equatable {
 
     static func new(name: String, categoryId: String) -> GroceryItem {
         GroceryItem(
-            id: UUID().uuidString.lowercased().replacingOccurrences(of: "-", with: "").prefix(8).description,
+            id: UUID().uuidString.lowercased(),
             name: name,
             quantity: 1,
             categoryId: categoryId,

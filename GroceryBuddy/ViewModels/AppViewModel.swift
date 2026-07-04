@@ -9,9 +9,8 @@ class AppViewModel: ObservableObject {
     @Published var savedLayouts: [SavedLayoutSlot] = LocalStore.loadSavedLayouts()
     @Published var savedItemLists: [SavedItemListSlot] = LocalStore.loadSavedItemLists()
     @Published var itemHistory: [ItemHistoryEntry] = LocalStore.loadItemHistory()
-    @Published var route: RouteState? = nil
-    @Published var currentUser: AuthUser? = nil
-    @Published var isCheckingSession = true
+    @Published var route: RouteState? = LocalStore.loadRoute()
+    @Published var currentUser: AuthUser? = LocalStore.loadUser()
 
     let sync = CloudSync()
     private var cancellables = Set<AnyCancellable>()
@@ -26,6 +25,13 @@ class AppViewModel: ObservableObject {
         $savedLayouts.dropFirst().sink { LocalStore.saveSavedLayouts($0) }.store(in: &cancellables)
         $savedItemLists.dropFirst().sink { LocalStore.saveSavedItemLists($0) }.store(in: &cancellables)
         $itemHistory.dropFirst().sink { LocalStore.saveItemHistory($0) }.store(in: &cancellables)
+        $route.dropFirst().sink { LocalStore.saveRoute($0) }.store(in: &cancellables)
+
+        // Nested ObservableObjects don't propagate automatically; forward sync
+        // status changes so views observing the view model re-render.
+        sync.objectWillChange
+            .sink { [weak self] _ in self?.objectWillChange.send() }
+            .store(in: &cancellables)
 
         // Cloud sync on data change when logged in
         Publishers.CombineLatest4($items, $categories, $mapLayout, $savedLayouts)
@@ -54,10 +60,39 @@ class AppViewModel: ObservableObject {
     var isLoggedIn: Bool { currentUser != nil }
 
     func checkSession() async {
-        isCheckingSession = true
-        currentUser = await AuthClient.shared.getSession()
-        if currentUser != nil { await sync.onLogin(vm: self) }
-        isCheckingSession = false
+        switch await AuthClient.shared.getSession() {
+        case .signedIn(let user):
+            await establishSession(user)
+        case .signedOut:
+            currentUser = nil
+            LocalStore.saveUser(nil)
+        case .unreachable:
+            // Offline — keep the last-known signed-in presentation; syncing
+            // stays disabled until a session check succeeds on foreground.
+            break
+        }
+    }
+
+    /// Call when the app returns to the foreground: re-establishes the session
+    /// if the initial check failed offline, and retries a failed upload.
+    func appBecameActive() {
+        guard currentUser != nil else { return }
+        if !sync.hasLoaded {
+            Task { await checkSession() }
+        } else {
+            sync.retryIfFailed(vm: self)
+        }
+    }
+
+    private func establishSession(_ user: AuthUser) async {
+        // Local data may only merge into the same account it came from (or a
+        // first sign-in on a device that never had an account).
+        let lastAccount = LocalStore.lastAccountId()
+        let allowMerge = lastAccount == nil || lastAccount == user.id
+        currentUser = user
+        LocalStore.saveUser(user)
+        LocalStore.saveLastAccountId(user.id)
+        await sync.onLogin(vm: self, allowLocalMerge: allowMerge)
     }
 
     // MARK: - Item actions
@@ -88,6 +123,12 @@ class AppViewModel: ObservableObject {
             itemHistory[i].lastAddedAt = now
         } else {
             itemHistory.append(ItemHistoryEntry(name: name, categoryId: categoryId, count: 1, lastAddedAt: now))
+        }
+        // History is synced in full on every change, so keep it bounded.
+        let maxEntries = 500
+        if itemHistory.count > maxEntries {
+            itemHistory.sort { $0.lastAddedAt > $1.lastAddedAt }
+            itemHistory.removeLast(itemHistory.count - maxEntries)
         }
     }
 
@@ -149,20 +190,19 @@ class AppViewModel: ObservableObject {
     // MARK: - Auth
     func signIn(email: String, password: String) async throws {
         let user = try await AuthClient.shared.signIn(email: email, password: password)
-        currentUser = user
-        await sync.onLogin(vm: self)
+        await establishSession(user)
     }
 
     func signUp(email: String, password: String, name: String) async throws {
         let user = try await AuthClient.shared.signUp(email: email, password: password, name: name)
-        currentUser = user
-        await sync.onLogin(vm: self)
+        await establishSession(user)
     }
 
     func signOut() async {
-        try? await AuthClient.shared.signOut()
+        await AuthClient.shared.signOut()
         sync.onLogout()
         currentUser = nil
+        LocalStore.saveUser(nil)
     }
 
     // MARK: - Route

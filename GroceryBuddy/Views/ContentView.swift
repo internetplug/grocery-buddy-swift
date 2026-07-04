@@ -9,12 +9,14 @@ struct ContentView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Both tabs stay alive so map zoom/pan/selection survive switching.
             ZStack {
-                if tab == .list {
-                    GroceryListView(authOpen: $authOpen)
-                } else {
-                    StoreMapView(onSwitchToList: { tab = .list })
-                }
+                GroceryListView(authOpen: $authOpen)
+                    .opacity(tab == .list ? 1 : 0)
+                    .allowsHitTesting(tab == .list)
+                StoreMapView(onSwitchToList: { tab = .list })
+                    .opacity(tab == .map ? 1 : 0)
+                    .allowsHitTesting(tab == .map)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
 

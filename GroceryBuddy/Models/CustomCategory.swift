@@ -38,19 +38,6 @@ let defaultCategories: [CustomCategory] = [
     .init(id: "misc",        name: "Miscellaneous",             emoji: "🛒", aisle: "", color: "#FAFAFA", textColor: "#424242", accentColor: "#616161", builtin: true),
 ]
 
-let colorPalette: [(color: String, textColor: String, accentColor: String)] = [
-    ("#FFF3E0", "#E65100", "#FB8C00"),
-    ("#E8EAF6", "#283593", "#5C6BC0"),
-    ("#FCE4EC", "#880E4F", "#E91E63"),
-    ("#E0F2F1", "#004D40", "#00897B"),
-    ("#FFF8E1", "#F57F17", "#FFA000"),
-    ("#F3E5F5", "#4A148C", "#7B1FA2"),
-    ("#E8F5E9", "#1B5E20", "#388E3C"),
-    ("#E3F2FD", "#0D47A1", "#1976D2"),
-    ("#FBE9E7", "#BF360C", "#E64A19"),
-    ("#F9FBE7", "#558B2F", "#7CB342"),
-]
-
 let defaultZoneLayouts: [String: ZoneLayout] = {
     // Wide (landscape) store: 18 columns x 10 rows. Bottom row left clear for the
     // entrance/checkout strip. Perimeter fresh depts on the walls, aisles through the center.
